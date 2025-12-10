@@ -1,0 +1,681 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+{% extends 'base.html' %}
+<title>{% block title %} Admin Page {% endblock %}</title>
+<!-- <meta name="description" content="Admin Page Description"> -->
+{% load static %}
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" /> -->
+
+{% block extra_css %}
+<style>
+    /* Reset some default styles */
+    body,
+    h1,
+    p,
+    ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .form-group {
+        margin: 10px 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+        padding-top: 60px;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        max-width: 400px;
+    }
+
+    .modal-content img {
+        width: 350px;
+        height: 65px;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+    }
+
+    .action-buttons {
+        display: flex;
+    }
+
+    .action-buttons button {
+        margin: 0 5px;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .action-buttons button.edit {
+        background-color: #062A63;
+        color: #fff;
+    }
+
+    .action-buttons button.edit:hover {
+        background-color: #2980b9;
+    }
+
+    .action-buttons button.delete {
+        background-color: #062A63;
+        color: #fff;
+    }
+
+    .action-buttons button.delete:hover {
+        background-color: #2980b9;
+    }
+
+    #form-div {
+        display: none;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #form-div h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+    }
+    .h {
+
+        justify-content: center;
+        margin-left: 70px;
+    }
+
+    
+
+    .report-table th,
+    .report-table td {
+        border: 1px solid #062A63;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .report-table th {
+        background-color: #062A63;
+        color: #ecf0f1;
+    }
+
+    th,
+    td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+
+    }
+
+    th {
+        color: #f2f2f2;
+        background-color: #062A63;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .no-results {
+        font-style: italic;
+        color: #888;
+    }
+
+    .select-platform {
+        margin: 1px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Center items horizontally */
+    }
+
+    .select-platform label {
+        font-weight: bold;
+        font-size: 20px;
+        margin-right: 10px;
+        /* Adjust margin as needed */
+        color: #062A63;
+    }
+
+    .select-platform select {
+        width: 15%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-left: 10px;
+        /* Apply margin-left to the select element */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sameline">
+    <div> <button id="addButton">+</button></div>
+    <div style="text-align: right; margin-right: 70px;" class="sectionSearch">
+        <form style="display: inline-block; position: relative;">
+            <input type="text" name="q" id="searchInput" placeholder="Search employee..." value="{{ request.GET.q }}"
+                style="padding: 8px 30px 8px 8px; width: 250px; border: 1px solid #ccc; border-radius: 5px;">
+
+            <span id="clearSearch" style="
+                position: absolute;
+                right: 100px;
+                top: 50%;
+                transform: translateY(-50%);
+                cursor: pointer;
+                color: #aaa;
+                font-weight: bold; "> ✖ </span>
+
+            <button type="submit"
+                style="padding: 8px 15px; background-color: #062A63; color: #fff; border: none; border-radius: 5px;">
+                Search
+            </button>
+        </form>
+    </div>
+</div>
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 class="h">Add Employee</h2>
+        <form id="addForm" method="post" action="{% url 'employee_master' %}" class="form-group">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ record_id }}">
+
+            <div class="form-group">
+                <label for="user_level">User Level</label>
+                <select name="user_level" id="user_level">
+                    <option value="">Select User Level</option>
+                    {% for level in user_levels %}
+                        <option value="{{ level.user }}">{{ level.user }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="Token_no">Token no</label>
+                <input type="text" name="token" id="Token_no" value="{{ form.token.value|default_if_none:'' }}"
+                    required>
+                {% if form.token.errors %}
+                <div style="color: red;">{{ form.token.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+
+            {% comment %} <div class="form-group">
+                <label for="Token_no">Token no</label>
+                <input type="text" name="token" id="Token_no" value="{{ token }}" required>
+            </div> {% endcomment %}
+
+            <div class="form-group">
+                <label for="Employee_Name">Employee Name</label>
+                <input type="text" name="user_name" id="Employee_Name" value="{{ user_name }}" required>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="edit">Save</button>
+                <button type="reset" class="delete">Cancel</button>
+            </div>
+
+            {% if form.errors %}
+            <p style="color: red;">{{ form.errors }}</p>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Sr. No.</th>
+            <th>Token no</th>
+            <th>Employee Name</th>
+            <th>User Level</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ user.token }}</td>
+            <td>{{ user.user_name }}</td>
+            <td>{{ user.user_level }}</td>
+            <td>
+                <button class="edit-link action-buttons" data-id="{{ user.pk }}"
+                    style="color: #062A63; font-size: 20px; background: none; border: none; cursor: pointer;">Edit</button>
+            </td>
+            <td>
+                <a href="{% url 'employee_delete' user.pk %}" class="delete-link action-buttons"
+                    style="color: red; font-size: 20px;">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">No data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+{% if messages %}
+<script>
+    // Function to display flash messages using SweetAlert2
+    function displayFlashMessages() {
+        {% for message in messages %}
+        Swal.fire({
+            icon: "{{ message.tags }}",
+            text: "{{ message }}"
+        });
+        {% endfor %}
+    }
+
+    // Call the function to display flash messages after the page has loaded
+    window.addEventListener('DOMContentLoaded', function () {
+        displayFlashMessages();
+    });
+</script>
+{% endif %}
+
+
+<script>
+
+    const addButton = document.getElementById('addButton');
+    const modal = document.getElementById('myModal');
+    const closeModal = document.querySelector('.close');
+    const cancelBtn = document.querySelector('.delete');
+    const form = document.getElementById('addForm');
+
+    addButton.addEventListener('click', () => {
+        clearFormFields();
+        modal.style.display = 'block';
+    });
+
+    closeModal.addEventListener('click', () => {
+        modal.style.display = 'none';
+        clearFormFields();
+    });
+
+    cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.style.display = 'none';
+        clearFormFields();
+    });
+
+    // window.addEventListener('click', (event) => {
+    //     if (event.target === modal) {
+    //         // modal.style.display = 'none';
+    //         clearFormFields();
+    //     }
+    // });
+
+    // Edit button AJAX logic
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.edit-link').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const userId = this.getAttribute('data-id');
+                fetch(`{% url 'employee_edit' 0 %}`.replace('0', userId) + '?ajax=1')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Populate form fields
+                            form.querySelector('[name=user_id]').value = data.user.id;
+                            form.querySelector('[name=user_level]').value = data.user.user_level;
+                            form.querySelector('[name=token]').value = data.user.token;
+                            form.querySelector('[name=user_name]').value = data.user.user_name;
+                            modal.style.display = 'block';
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.error || 'Could not fetch employee data.'
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error',
+                            text: 'Could not connect to server.'
+                        });
+                    });
+            });
+        });
+    });
+
+    function clearFormFields() {
+        if (form) {
+            form.reset();
+            form.querySelector('[name=user_id]').value = '';
+        }
+    }
+
+    // AJAX form submit for add/edit
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const tokenInput = document.getElementById('Token_no');
+            if (tokenInput) {
+                const value = tokenInput.value.trim();
+                if (!/^\d+$/.test(value)) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Invalid Token No",
+                        text: "Token number must contain numbers only.",
+                        confirmButtonColor: "#062A63"
+                    });
+                    return false;
+                }
+            }
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message,
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        modal.style.display = 'none';
+                        reloadEmployeeTable();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.error || 'An error occurred.'
+                        });
+                    }
+                })
+                .catch(() => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Network Error',
+                        text: 'Could not connect to server.'
+                    });
+                });
+        });
+    }
+
+    // AJAX delete
+    document.addEventListener("DOMContentLoaded", function () {
+        const deleteLinks = document.querySelectorAll(".delete-link");
+        deleteLinks.forEach(link => {
+            link.addEventListener("click", function (event) {
+                event.preventDefault();
+                const url = this.href;
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This employee record will be permanently deleted.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                            }
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'success',
+                                        title: data.message,
+                                        showConfirmButton: false,
+                                        timer: 2000
+                                    });
+                                    reloadEmployeeTable();
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.error || 'An error occurred.'
+                                    });
+                                }
+                            })
+                            .catch(() => {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Network Error',
+                                    text: 'Could not connect to server.'
+                                });
+                            });
+                    }
+                });
+            });
+        });
+    });
+
+    // Reload employee table via AJAX
+    function reloadEmployeeTable() {
+        fetch(window.location.pathname + '?ajax=1')
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTable = doc.querySelector('.data-table');
+                const oldTable = document.querySelector('.data-table');
+                if (newTable && oldTable) {
+                    oldTable.innerHTML = newTable.innerHTML;
+                    attachEditListeners();
+                    attachDeleteListeners();
+                }
+            });
+    }
+
+    // Attach edit-link listeners (for initial load and after table reload)
+    function attachEditListeners() {
+        document.querySelectorAll('.edit-link').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const userId = this.getAttribute('data-id');
+                fetch(`{% url 'employee_edit' 0 %}`.replace('0', userId) + '?ajax=1')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            form.querySelector('[name=user_id]').value = data.user.id;
+                            form.querySelector('[name=user_level]').value = data.user.user_level;
+                            form.querySelector('[name=token]').value = data.user.token;
+                            form.querySelector('[name=user_name]').value = data.user.user_name;
+                            modal.style.display = 'block';
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.error || 'Could not fetch employee data.'
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error',
+                            text: 'Could not connect to server.'
+                        });
+                    });
+            });
+        });
+    }
+    // Attach delete-link listeners (for initial load and after table reload)
+    function attachDeleteListeners() {
+        document.querySelectorAll('.delete-link').forEach(function (link) {
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+                const url = this.href;
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This employee record will be permanently deleted.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                            }
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'success',
+                                        title: data.message,
+                                        showConfirmButton: false,
+                                        timer: 2000
+                                    });
+                                    reloadEmployeeTable();
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.error || 'An error occurred.'
+                                    });
+                                }
+                            })
+                            .catch(() => {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Network Error',
+                                    text: 'Could not connect to server.'
+                                });
+                            });
+                    }
+                });
+            });
+        });
+    }
+    // Initial attach for edit/delete listeners
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            attachEditListeners();
+            attachDeleteListeners();
+        });
+    } else {
+        attachEditListeners();
+        attachDeleteListeners();
+    }
+</script>
+
+<!-- Removed duplicate legacy delete confirmation script. Only AJAX SweetAlert2 confirmation remains. -->
+
+<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
+ <script src="{% static 'node_modules/sweetalert2/dist/sweetalert2.all.min.js' %}"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("addForm");
+        if (form) {
+            form.addEventListener("submit", function (event) {
+                const tokenInput = document.getElementById("Token_no");
+                if (tokenInput) {
+                    const value = tokenInput.value.trim();
+                    if (!/^\d+$/.test(value)) {
+                        event.preventDefault();
+                        Swal.fire({
+                            icon: "error",
+                            title: "Invalid Token No",
+                            text: "Token number must contain numbers only.",
+                            confirmButtonColor: "#062A63"
+                        });
+                        return false;
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const input = document.getElementById("searchInput");
+            const clearBtn = document.getElementById("clearSearch");
+            const searchForm = input.closest("form");
+
+            clearBtn.addEventListener("click", function () {
+                input.value = '';
+                input.focus();
+                if (searchForm) {
+                    // searchForm.submit();  // reload all data with empty query
+                    reloadEmployeeTable();
+                }
+            });
+        });
+    </script>
+<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+{% endblock %}
+

@@ -1,0 +1,1171 @@
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"> -->
+{% extends 'base.html' %}
+{% load static %}
+<title>{% block title %} Admin Report {% endblock %}</title>
+<!-- <meta name="description" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1"> -->
+
+
+
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+        crossorigin="anonymous" /> -->
+{% block extra_css %}
+<style>
+    /* Global Styles */
+    body {
+        font-family: Arial, sans-serif;
+        padding-bottom: 40px;
+    }
+
+
+    /* Form Container */
+    .report-form {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        margin: 20px;
+        padding: 30px;
+        border: 1px solid #ccc;
+        background-color: #f5f5f5;
+        border-radius: 10px;
+    }
+
+    /* Form Fields */
+    .form-group {
+        flex: 1;
+        margin: 0 10px;
+        min-width: 150px;
+    }
+
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .form-group select,
+    .form-group input[type="date"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* Specific Field Adjustments */
+    #status-group {
+        flex: 0.5;
+        max-width: 100px;
+    }
+
+    #model-group {
+        flex: 2;
+        max-width: 400px;
+    }
+
+    /* Button Group */
+    .button-group {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-start;
+        margin-top: 20px;
+    }
+    /* .button-group {
+        display: flex;
+        justify-content: flex-start;
+        gap: 15px;
+        margin-top: 20px;
+        width: 100%;
+    } */
+
+    
+    .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #062A63, #045191);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 42, 99, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+    /* Button Styles */
+    .btn,
+    .report-button,
+    .excel-button,
+    .pdf-button {
+        background-color: #062A63;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn:hover,
+    .report-button:hover,
+    .excel-button:hover,
+    .pdf-button:hover {
+        background-color: #045191;
+    }
+
+    /* Report Container */
+    .report-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Table Styles */
+    .data-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .data-table thead th {
+        background-color: #02366e;
+        color: white;
+        padding: 12px;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .data-table tbody td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: center;
+        font-size: 14px;
+        color: #333;
+    }
+
+    /* Alternate Row Coloring */
+    .data-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .data-table tbody tr:nth-child(odd) {
+        background-color: #ffffff;
+    }
+
+    .data-table tbody tr:hover {
+        background-color: #e0f7fa;
+    }
+
+    /* Scrollable Table Container */
+    #resultsContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        max-height: 400px;
+        overflow: auto;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        width: 95%;
+        margin: 0 auto;
+    }
+
+    /* Pie Chart Section */
+    .pie-chart-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .pie-chart-container img {
+        width: 300px;
+        margin-bottom: 10px;
+    }
+
+    /* Totals Info */
+    .totals-info {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    /* Legend */
+    .legend {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+    }
+
+    .ok-color {
+        background-color: #88EA16;
+    }
+
+    .nok-color {
+        background-color: #FF0000;
+    }
+
+    /* Scan QR Code Button */
+    .scan-btn {
+        background-color: #003366;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+
+    .scan-btn:hover {
+        background-color: #005b99;
+    }
+
+    .scan-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 91, 153, 0.5);
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+        padding-top: 60px;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    .modal-content img {
+        width: 350px;
+        height: 65px;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+    }
+
+    .pagination {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .pagination .btn {
+        background-color: #003366;
+        color: white;
+        padding: 5px 12px;
+        /* Reduced padding */
+        font-size: 14px;
+        /* Slightly smaller font */
+        text-decoration: none;
+        border-radius: 4px;
+        /* Slightly smaller border radius */
+        margin: 0 3px;
+        /* Reduced margin */
+        display: inline-block;
+        transition: background-color 0.3s;
+    }
+
+    .pagination .btn:hover {
+        background-color: #0055a4;
+    }
+
+    .page-info {
+        font-weight: bold;
+        color: #003366;
+        margin: 0 10px;
+    }
+
+
+    /* Responsive Design */
+    @media screen and (max-width: 768px) {
+        .form-group {
+            flex: 100%;
+            margin: 10px 0;
+        }
+
+        #resultsContainer {
+            padding: 2px;
+        }
+
+        .data-table {
+            font-size: 12px;
+            min-width: 100%;
+        }
+
+        .data-table tbody td {
+            padding: 8px;
+        }
+
+        .data-table thead th {
+            padding: 10px;
+        }
+    }
+
+</style>
+{% endblock %}
+<!-- </head> -->
+
+{% block content %}
+<div class="container">
+    <body data-ok-count="{{ ok_count }}" data-nok-count="{{ nok_count }}">
+
+        <!-- Modal for viewing images -->
+        <div id="imageModal" class="modal">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img class="modal-content" id="modalImage" alt="Image">
+            <div id="caption"></div>
+        </div>
+        <form class="report-form" id="filterForm" method="GET" onsubmit="return false;">
+
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" class="form-control"
+                    value="{{ request.GET.date|default_if_none:'' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="month"><b>Month</b></label>
+                <select id="month" name="month" class="form-control">
+                    <option value="">Select Month</option>
+                    <option value="1" {% if request.GET.month == '1' %}selected{% endif %}>January</option>
+                    <option value="2" {% if request.GET.month == '2' %}selected{% endif %}>February</option>
+                    <option value="3" {% if request.GET.month == '3' %}selected{% endif %}>March</option>
+                    <option value="4" {% if request.GET.month == '4' %}selected{% endif %}>April</option>
+                    <option value="5" {% if request.GET.month == '5' %}selected{% endif %}>May</option>
+                    <option value="6" {% if request.GET.month == '6' %}selected{% endif %}>June</option>
+                    <option value="7" {% if request.GET.month == '7' %}selected{% endif %}>July</option>
+                    <option value="8" {% if request.GET.month == '8' %}selected{% endif %}>August</option>
+                    <option value="9" {% if request.GET.month == '9' %}selected{% endif %}>September</option>
+                    <option value="10" {% if request.GET.month == '10' %}selected{% endif %}>October</option>
+                    <option value="11" {% if request.GET.month == '11' %}selected{% endif %}>November</option>
+                    <option value="12" {% if request.GET.month == '12' %}selected{% endif %}>December</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="year"><b>Year</b></label>
+                <select id="year" name="year" class="form-control">
+                    <option value="">Select Year</option>
+                    {% for yr in years %}
+                    <option value="{{ yr }}" {% if request.GET.year == yr|stringformat:'s' %}selected{% endif %}>{{ yr }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- <div class="form-group">
+            <label for="attribute">Attribute</label>
+            <select id="attribute" name="attribute" class="form-control">
+                <option value="">All</option>
+                {% for attr in attributes %}
+                <option value="{{ attr }}">{{ attr }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+
+                                                              
+            <label for="severity">Severity</label>
+            <select id="severity" name="severity" class="form-control">
+                <option value="">All</option>
+                {% for level in severities %}
+                <option value="{{ level }}">{{ level }}</option>
+                {% endfor %}
+            </select>
+
+
+
+            {% comment %} <select id="severity" name="severity" class="form-control">
+                <option value="">All</option>
+                {% for level in severities %}
+                <option value="{{ level }}">{{ level }}</option>
+                {% endfor %}
+            </select> {% endcomment %}
+        </div>
+
+        <div class="form-group">
+            <label for="highlight">Highlight</label>
+            <select id="highlight" name="highlight" class="form-control">
+                <option value="">All</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div> -->
+
+            <!-- Platform Selection -->
+            <!-- <div class="form-group" id="platform-group">
+                <label for="platform_id">Platform.</label>
+                <select id="platform_id" name="platform_id" class="form-control">
+                    <option value="">Select Platform</option> 
+                    {% for platform in platforms %}
+                        <option value="{{ platform.id }}" 
+                                {% if platform.id|stringformat:"s" == selected_platform_id %} selected {% endif %}>
+                            {{ platform.platform }} 
+                        </option>
+                    {% endfor %}
+                </select>
+            </div> -->
+
+
+            <!-- Model Selection -->
+            <div class="form-group" id="model-group">
+                <label for="model_id">Model</label>
+                <select id="model_id" name="model_id">
+                    <option value="">ALL</option> <!-- Default 'All' option -->
+                    {% for model in models %}
+                    <option value="{{ model.id }}" {% if model.id|stringformat:"s" == selected_model_id %} selected {% endif %}>
+                        {{ model.model_code }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Shift Selection -->
+            <div class="form-group" id="shift-group">
+                <label for="shift">Shift</label>
+                <select id="shift" name="shift">
+                    <option value="">All</option> <!-- Default 'All' option -->
+                    {% for shift in shifts %}
+                    <option value="{{ shift }}">{{ shift }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+
+
+            <!-- Location Selection -->
+            <div class="form-group" id="location-group">
+                <label for="location">Location</label>
+                <select id="location" name="location">
+                    <option value="">All</option> <!-- Default 'All' option -->
+                    {% for location in locations %}
+                    <option value="{{ location }}">{{ location }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">All</option>
+                    {% for status in statuses %}
+                    <option value="{{ status }}" {% if request.GET.status == status %}selected{% endif %}>{{ status }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% comment %} <div class="form-group">
+                <label for="status">Clavis/Split Pin</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="ALL" {% if selected_status == "ALL" %}selected{% endif %}>All</option>
+                    <option value="OK" {% if selected_status == "OK" %}selected{% endif %}>OK</option>
+                    <option value="NOK" {% if selected_status == "NOK" %}selected{% endif %}>NOK</option>
+                </select>
+            </div>
+            {% endcomment %}
+
+
+
+            <div class="button-group">
+                <button type="submit" id="generateReportButton" class="btn btn-primary"><i class="fas fa-chart-bar"></i>
+                    Generate Report</button>
+                <button onclick="exportToExcel()" class="btn btn-secondary" type="button"><i class="fas fa-file-excel"></i>
+                    Export Excel</button>
+                <button onclick="exportToPDF()" class="btn btn-danger" type="button"><i class="fas fa-file-pdf"></i>
+                    Export PDF</button>
+                <button type="button" id="clearFiltersButton" class="btn btn-clear" ><i class="fas fa-times"></i>Clear Filters</button>
+            </div>
+        </form>
+    </div>
+    <!-- Left-side Pie Chart with OK/NOK Counts -->
+    <div class="report-container">
+
+        <div class="chart-section">
+            <canvas id="okNokChart"></canvas>
+        </div>
+    </div>
+
+
+
+
+    <!-- Pagination Controls -->
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page=1" class="btn">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn">Previous</a>
+        {% endif %}
+
+        <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}" class="btn">Last</a>
+        {% endif %}
+    </div>
+
+
+    <!-- Display area for results -->
+</div>
+<!-- Display area for results -->
+<div class="data-table" id="resultsContainer">
+    <table>
+        <thead>
+            <tr>
+                <th>VIN (Vehicle Identification Number)</th>
+                <th>Part</th>
+                <th>Answer Status</th>
+                <th>Shift Name</th>
+                <th>Operator</th>
+                <th>Location</th>
+                {% comment %} <th>Clavis/Split</th> {% endcomment %}
+                <!-- <th>QC No</th> -->
+                <th>Test Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in filtered_answers %}
+            <tr>
+                <td><a href="{% url 'vin_detail' vin=report.qr_code log_date=report.log_date %}?status={{ request.GET.status }}&location={{ request.GET.location }}
+">
+                        {{ report.qr_code|slice:":17" }}
+                    </a></td>
+                <td>{{ report.model_code }}</td>
+                <td>{{ report.answer_status }}</td>
+                <td>{{ report.shift_name }}</td>
+                <td>{{ report.operator }}</td>
+                <td>{{ report.location }}</td>
+                {% comment %} <td>{{ report.ocr_text }}</td> {% endcomment %}
+                <!-- <td>{{ report.qc_no }}</td> -->
+                <td>{{ report.log_date|date:"d/m/y" }}</td>
+
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8">No data found for the selected filters.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+</div>
+</div>
+</div>
+
+
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery script -->
+<script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
+<script src="{% static 'js/xlsx.full.min.js' %}"></script>
+<script src="{% static 'js/jspdf.umd.min.js' %}"></script>
+<script src="{% static 'js/jspdf.plugin.autotable.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#filterButton').on('click', function () {
+            var formData = $('#filterForm').serialize();
+            $.ajax({
+                type: 'GET',
+                url: '/report_screen/',
+                data: formData,
+                success: function (data) {
+                    $('#resultsTableBody').empty(); // Clear previous results
+                    if (data.length > 0) {
+                        data.forEach(function (result) {
+                            var newRow = "<tr>" +
+                                "<td>" + result.model_name + "</td>" +
+                                "<td>" + result.result + "</td>" +
+                                "<td>" + result.Shift + "</td>"
+                            "<td>" + result.Date_Field + "</td>" +
+                                "</tr>";
+
+                            var newRow = "<tr>" +
+                                "<td>" + result.model_name + "</td>" +
+                                "<td>" + result.result + "</td>" +
+                                "<td>" + result.Shift + "</td>" +
+                                "<td>" + result.Date_Field + "</td>" +
+                                "</tr>";
+
+                            $('#resultsTableBody').append(newRow);
+                        });
+                    } else {
+                        $('#resultsTableBody').html('<tr><td colspan="5" class="no-results">No results found</td></tr>');
+                    }
+                    $('#resultsContainer').show(); // Show results container
+                },
+                error: function (error) {
+                    console.log('Error fetching data:', error);
+                }
+            });
+        });
+    });
+
+
+    function openContactModal() {
+        document.getElementById('contactModal').style.display = 'block';
+    }
+
+    function closeContactModal() {
+        document.getElementById('contactModal').style.display = 'none';
+    }
+
+    // Close modal if clicked outside of it
+    window.onclick = function (event) {
+        var modal = document.getElementById('contactModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+    function showImage(url) {
+        // Get the modal element and image element
+        var modal = document.getElementById("imageModal");
+        var modalImage = document.getElementById("modalImage");
+
+        // Set the image URL and display the modal
+        modalImage.src = url;
+        modal.style.display = "block";
+    }
+    function closeModal() {
+        // Hide the modal
+        var modal = document.getElementById("imageModal");
+        modal.style.display = "none";
+    }
+    window.onclick = function (event) {
+        var modal = document.getElementById("imageModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+    function formatDate(input) {
+        if (input.type === 'date' && input.value) {
+            const [year, month, day] = input.value.split("-");
+            if (year && month && day) {
+                input.type = 'text'; // Change type back to text for display
+                input.value = `${day}/${month}/${year}`;
+            }
+        }
+    }
+    function exportToExcel() {
+    const reportTable = document.querySelector(".data-table");
+    if (!reportTable) {
+        alert("Table not found!");
+        return;
+    }
+
+    // Extract current filter info with fallback to "All"
+    const filters = {
+        Date: document.getElementById('date').value || 'All',
+        Month: document.getElementById('month').options[document.getElementById('month').selectedIndex].text || 'All',
+        Year: document.getElementById('year').value || 'All',
+        Model: document.getElementById('model_id').options[document.getElementById('model_id').selectedIndex].text || 'All',
+        Shift: document.getElementById('shift').value || 'All',
+        Location: document.getElementById('location').value || 'All',
+        Status: document.getElementById('status').value || 'All'
+    };
+
+    const excelData = [];
+
+    // Add filter information as header rows
+    for (const [filterName, filterValue] of Object.entries(filters)) {
+        excelData.push([filterName, filterValue]);
+    }
+
+    // Add an empty row to separate filters from data
+    excelData.push([]);
+
+    // Extract table rows (headers and body)
+    const rows = reportTable.querySelectorAll("thead tr, tbody tr");
+
+    rows.forEach(row => {
+        const rowData = [];
+        row.querySelectorAll("th, td").forEach(cell => {
+            rowData.push(cell.textContent.trim());
+        });
+        excelData.push(rowData);
+    });
+
+    // Create a worksheet with the data
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+
+    // Adjust column widths for better visibility
+    worksheet["!cols"] = [
+        { wch: 25 }, // VIN or Batch
+        { wch: 15 }, // Part / Recipe Name
+        { wch: 15 }, // Answer Status / Batch Quantity
+        { wch: 15 }, // Shift Name / Remark
+        { wch: 20 }, // Operator / Status
+        { wch: 15 }, // Location / Required Time
+        { wch: 15 }  // Test Date / All Batch Time
+    ];
+
+    // Create a new workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
+
+    // Save the workbook as an Excel file
+    XLSX.writeFile(workbook, 'Generated_Report.xlsx');
+}
+
+    function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    // Set title for the PDF
+    doc.setFontSize(14);
+    doc.setTextColor(0, 51, 102);
+    doc.text("Generated Report", 14, 15);
+
+    // Extract current filter info (fallback to "All" if empty)
+    const filters = {
+        Date: document.getElementById('date').value || 'All',
+        Month: document.getElementById('month').options[document.getElementById('month').selectedIndex].text || 'All',
+        Year: document.getElementById('year').value || 'All',
+        Model: document.getElementById('model_id').options[document.getElementById('model_id').selectedIndex].text || 'All',
+        Shift: document.getElementById('shift').value || 'All',
+        Location: document.getElementById('location').value || 'All',
+        Status: document.getElementById('status').value || 'All'
+    };
+
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    let yPos = 24;
+    const lineHeight = 7;
+
+    // Print filters on the PDF with spacing
+    for (const [label, value] of Object.entries(filters)) {
+        doc.text(`${label}: ${value}`, 14, yPos);
+        yPos += lineHeight;
+    }
+
+    // Extract data rows from table body
+    const reportTable = document.querySelector(".data-table");
+    if (!reportTable) {
+        alert("Table not found!");
+        return;
+    }
+
+    const rows = Array.from(reportTable.querySelectorAll("tbody tr"));
+    if (rows.length === 0) {
+        alert("No data available to export.");
+        return;
+    }
+
+    const pdfData = rows.map(row =>
+        Array.from(row.querySelectorAll("td")).map(cell => cell.textContent.trim())
+    );
+
+    // Define table column headers
+    const headers = [
+        ["VIN", "Part", "Answer Status", "Shift Name", "Operator", "Location", "Test Date"]
+    ];
+
+    // Create table using autoTable starting after the filters
+    doc.autoTable({
+        head: headers,
+        body: pdfData,
+        startY: yPos + 3,
+        theme: 'striped',
+        styles: {
+            fontSize: 7,
+            cellPadding: 2,
+            halign: 'center',
+            overflow: 'linebreak',
+        },
+        headStyles: {
+            fillColor: [0, 51, 102],
+            textColor: [255, 255, 255],
+            fontSize: 8,
+            fontStyle: 'bold',
+            halign: 'center',
+        },
+        alternateRowStyles: {
+            fillColor: [240, 240, 240],
+        },
+        margin: { top: yPos + 3, left: 10, right: 10 },
+        pageBreak: 'auto',
+        didDrawPage: function (data) {
+            const pageCount = doc.internal.getNumberOfPages();
+            doc.setFontSize(8);
+            doc.setTextColor(100);
+            doc.text(`Page ${pageCount}`, data.settings.margin.left,
+                doc.internal.pageSize.height - 10);
+        }
+    });
+
+    // Save the PDF file
+    doc.save('Generated_Report.pdf');
+}
+
+    $('#filterButton').on('click', function () {
+        let okCount = 0;
+        let notOkCount = 0;
+
+        data.forEach(result => {
+            if (result.result === 'ok') {
+                okCount++;
+            } else if (result.result === 'not ok') {
+                notOkCount++;
+            }
+        });
+
+        // Call the function to render the pie chart
+        renderPieChart(okCount, notOkCount);
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const dateInput = document.getElementById("date");
+        const monthSelect = document.getElementById("month");
+        const yearSelect = document.getElementById("year");
+
+        // Debugging: Check if elements are found
+        console.log("Date Input:", dateInput);
+        console.log("Month Select:", monthSelect);
+        console.log("Year Select:", yearSelect);
+
+        function toggleFields() {
+            console.log("toggleFields called");
+            console.log("dateInput.value:", dateInput.value);
+            console.log("monthSelect.value:", monthSelect.value);
+            console.log("yearSelect.value:", yearSelect.value);
+
+            if (dateInput.value) {
+                // When date is selected, disable month and year
+                monthSelect.value = '';
+                yearSelect.value = '';
+                monthSelect.disabled = true;
+                yearSelect.disabled = true;
+                dateInput.disabled = false;
+                yearSelect.required = false;
+            } else if (yearSelect.value) {
+                // When year is selected, enable month, disable date
+                dateInput.value = '';
+                dateInput.disabled = true;
+                monthSelect.disabled = false;
+                yearSelect.disabled = false;
+                yearSelect.required = false;
+            } else {
+                // When neither date nor year is selected, enable date and year, disable month
+                dateInput.disabled = false;
+                monthSelect.value = '';
+                monthSelect.disabled = true;
+                yearSelect.disabled = false;
+                yearSelect.required = false;
+            }
+
+            // Month cannot be selected before year
+            if (!yearSelect.value) {
+                monthSelect.value = '';
+                monthSelect.disabled = true;
+                yearSelect.required = false;
+            }
+
+            // When month is selected, year must be required
+            if (monthSelect.value) {
+                yearSelect.required = true;
+            } else {
+                yearSelect.required = false;
+            }
+        }
+
+        // Event Listeners with Logging
+        dateInput.addEventListener("change", function () {
+            console.log("Date Changed:", dateInput.value);
+            toggleFields();
+        });
+
+        monthSelect.addEventListener("change", function () {
+            console.log("Month Changed:", monthSelect.value);
+            toggleFields();
+        });
+
+        yearSelect.addEventListener("change", function () {
+            console.log("Year Changed:", yearSelect.value);
+            toggleFields();
+        });
+
+        // Ensure fields are set correctly on load
+        toggleFields();
+    });
+</script>
+<script>
+    // Chart rendering function
+    function renderOkNokChart(okCount, nokCount) {
+        var chartSection = document.querySelector('.chart-section');
+        let ctx = document.getElementById('okNokChart');
+        if (!ctx) {
+            chartSection.innerHTML = '<canvas id="okNokChart"></canvas>';
+            ctx = document.getElementById('okNokChart');
+        } else {
+            if (chartSection.innerText.includes('No data to display')) {
+                chartSection.innerHTML = '<canvas id="okNokChart"></canvas>';
+                ctx = document.getElementById('okNokChart');
+            }
+        }
+        if (window.okNokChartInstance) {
+            window.okNokChartInstance.destroy();
+        }
+        if (okCount === 0 && nokCount === 0) {
+            chartSection.innerHTML = "<p style='text-align:center; font-weight:bold;'>No data to display in pie chart.</p>";
+            return;
+        }
+        Chart.register(window.ChartDataLabels);
+        window.okNokChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ["OK", "NOK"],
+                datasets: [{
+                    data: [okCount, nokCount],
+                    backgroundColor: ["#4CAF50", "#FF0000"],
+                    hoverBackgroundColor: ["#388E3C", "#B71C1C"]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold' },
+                        formatter: (value, ctx) => {
+                            let total = ctx.chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+                            return total > 0 ? (value / total * 100).toFixed(1) + "%" : "";
+                        }
+                    }
+                }
+            }
+        });
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        renderOkNokChart(parseInt(document.body.getAttribute('data-ok-count')) || 0, parseInt(document.body.getAttribute('data-nok-count')) || 0);
+        // Filter logic
+        const dateInput = document.getElementById("date");
+        const monthSelect = document.getElementById("month");
+        const yearSelect = document.getElementById("year");
+        function toggleFields() {
+            if (dateInput.value) {
+                monthSelect.value = '';
+                yearSelect.value = '';
+                monthSelect.disabled = true;
+                yearSelect.disabled = true;
+                dateInput.disabled = false;
+            } else if (yearSelect.value) {
+                dateInput.value = '';
+                dateInput.disabled = true;
+                monthSelect.disabled = false;
+                // Month can only be enabled if year is selected
+                if (!yearSelect.value) {
+                    monthSelect.value = '';
+                    monthSelect.disabled = true;
+                }
+            } else {
+                dateInput.disabled = false;
+                monthSelect.disabled = true;
+                yearSelect.disabled = false;
+                monthSelect.value = '';
+            }
+            // Month cannot be selected before year
+            if (!yearSelect.value) {
+                monthSelect.value = '';
+                monthSelect.disabled = true;
+            }
+        }
+        dateInput.addEventListener("change", function () {
+            if (dateInput.value) {
+                monthSelect.value = '';
+                yearSelect.value = '';
+            }
+            toggleFields();
+        });
+        yearSelect.addEventListener("change", function () {
+            if (!yearSelect.value) {
+                monthSelect.value = '';
+            }
+            toggleFields();
+        });
+        monthSelect.addEventListener("change", function () {
+            if (!yearSelect.value) {
+                monthSelect.value = '';
+            }
+            toggleFields();
+        });
+        // Clear Filters button
+        document.getElementById('clearFiltersButton').addEventListener('click', function () {
+            console.log("Clear Filters clicked");
+            dateInput.value = '';
+            monthSelect.value = '';
+            yearSelect.value = '';
+            yearSelect.required = false;
+            document.getElementById('model_id').value = '';
+            document.getElementById('shift').value = '';
+            document.getElementById('location').value = '';
+            document.getElementById('status').value = '';
+            // Reset disabled states and required attribute properly
+            toggleFields();
+            // Trigger report reload
+            document.getElementById('generateReportButton').click();
+        });
+        toggleFields();
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const filterForm = document.getElementById('filterForm');
+        const generateReportButton = document.getElementById('generateReportButton');
+        generateReportButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                params.append(key, value);
+            }
+            fetch(window.location.pathname + '?' + params.toString(), {
+                method: 'GET',
+            })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newResults = doc.getElementById('resultsContainer');
+                    const oldResults = document.getElementById('resultsContainer');
+                    if (newResults && oldResults) {
+                        oldResults.innerHTML = newResults.innerHTML;
+                    }
+                    const newPagination = doc.querySelector('.pagination');
+                    const oldPagination = document.querySelector('.pagination');
+                    if (newPagination && oldPagination) {
+                        oldPagination.innerHTML = newPagination.innerHTML;
+                    }
+                    let okCount = 0, nokCount = 0;
+                    try {
+                        okCount = parseInt(doc.body.getAttribute('data-ok-count')) || 0;
+                        nokCount = parseInt(doc.body.getAttribute('data-nok-count')) || 0;
+                    } catch (e) { }
+                    renderOkNokChart(okCount, nokCount);
+                });
+        });
+    });
+</script>
+
+<!-- Chart.js -->
+<script src="{% static 'node_modules/chart.js/dist/chart.umd.js' %}"></script>
+
+<!-- Chart.js Data Labels plugin -->
+<script src="{% static 'node_modules/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js' %}"></script>
+
+<!-- html2pdf -->
+<script src="{% static 'node_modules/html2pdf.js/dist/html2pdf.bundle.min.js' %}"></script>
+
+<!-- XLSX -->
+<script src="{% static 'node_modules/xlsx/dist/xlsx.full.min.js' %}"></script>
+
+{% endblock %}
+<!-- </body> 
+</html> -->

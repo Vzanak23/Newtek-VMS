@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>Location List</title></head>
+<body>
+    <h2>Location List</h2>
+    <a href="{% url 'add_location' %}">Add New Location</a>
+    <ul>
+        {% for loc in locations %}
+            <li>
+                {{ loc.location }}
+                <a href="{% url 'delete_location' loc.pk %}">Delete</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

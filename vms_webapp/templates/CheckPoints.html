@@ -1,0 +1,1038 @@
+{% extends 'base.html' %}
+{% load static %}
+<title>{% block title %}Admin Page{% endblock %}</title>
+
+
+<!-- Toastr CSS & JS -->
+<link rel="stylesheet" href="{% static 'node_modules/toastr/build/toastr.min.css' %}">
+<script src="{% static 'node_modules/toastr/build/toastr.min.js' %}"></script>
+
+<!-- Font Awesome CSS -->
+<link rel="stylesheet" href="{% static 'node_modules/@fortawesome/fontawesome-free/css/all.min.css' %}">
+
+<!-- SweetAlert2 JS -->
+<script src="{% static 'node_modules/sweetalert2/dist/sweetalert2.all.min.js' %}"></script>
+
+<!-- jQuery for Select2 -->
+<script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
+
+{% block extra_css %}
+<style>
+    body,
+    h1,
+    p,
+    ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .form-group {
+        margin: 10px 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        max-width: 400px;
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        position: relative;
+    }
+
+    .modal-content img {
+        max-width: 350px;
+        width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+    }
+
+
+
+    .action-buttons {
+        display: flex;
+        justify-content: flex-start;
+        gap: 10px;
+    }
+
+    .action-buttons button {
+        margin: 0;
+        padding: 8px 18px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .action-buttons button.edit {
+        background-color: #062A63;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .action-buttons button.edit:hover {
+        background-color: #2980b9;
+    }
+
+    .action-buttons button.delete {
+        background-color: #062A63;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .action-buttons button.delete:hover {
+        background-color: #2980b9;
+        color: #fff;
+    }
+    
+
+    #form-div {
+        display: none;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #form-div h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+    }
+
+    .h {
+        margin-left: 80px;
+
+    }
+
+    .report-table th,
+    .report-table td {
+        border: 1px solid #062A63;
+        padding: 8px;
+        text-align: center;
+        margin-top: 10px
+    }
+
+    .report-table th {
+        background-color: #062A63;
+        color: #ecf0f1;
+    }
+
+    th,
+    td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+
+    }
+
+    th {
+        color: #f2f2f2;
+        background-color: #062A63;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .no-results {
+        font-style: italic;
+        color: #888;
+    }
+
+    .select-platform {
+        margin: 1px;
+        /* display: flex; */
+        align-items: center;
+        justify-content: center;
+        /* Center items horizontally */
+    }
+
+    .select-platform label {
+        font-weight: bold;
+        font-size: 20px;
+        /* margin-right: 10px; */
+        /* Adjust margin as needed */
+        /* color: #062A63; */
+    }
+
+    .select-platform select {
+        width: 15%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-left: 10px;
+        /* Apply margin-left to the select element */
+    }
+
+    .top-controls {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        justify-content: space-between;
+    }
+
+    .top-controls .select-platform {
+        margin: 0;
+    }
+
+    .select2-container--default .select2-selection--single {
+        width: 350px !important;
+        /* Match the select width */
+        min-width: 250px;
+        max-width: 600px;
+    }
+
+    .select-platform select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-left: 10px;
+        min-width: 250px;
+        /* Increased from 120px */
+        max-width: 600px;
+        /* Increased from 400px */
+        width: 350px;
+        /* Set a larger default width */
+    }
+    /* Limit Select2 dropdown result height to avoid overly tall dropdowns */
+    .select2-dropdown.limited-height-select2 .select2-results__options {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="top-controls sameline" style="display: flex; align-items: center; gap: 30px; margin-bottom: 20px;">
+    <button id="addButton">+</button>
+    <form method="get" id="platform-model-form" style="display: flex; align-items: center; gap: 20px; margin-bottom: 0;">
+        <label for="platform-select" style="margin-bottom: 0; font-weight: 500;">Client:</label>
+        <select name="platform_id" id="platform-select" class="form-control" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; min-width: 160px;" onchange="document.getElementById('platform-model-form').submit();">
+            <option value="">-- Select Client --</option>
+            {% for platform in platforms %}
+                <option value="{{ platform.id }}" {% if platform.id|stringformat:'s' == selected_platform %}selected{% endif %}>{{ platform.platform }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="modelDropdown" style="margin-bottom: 0; font-weight: 500;">Part:</label>
+            <select name="model_id" id="modelDropdown" class="searchable-dropdown" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; min-width: 180px; width: 100%;">
+                <option value="">Select Part</option>
+                {% for model in models %}
+                    <option value="{{ model.id }}">{{ model.model_code }} ({{ model.model_description }})</option>
+                {% endfor %}
+            </select>
+    </form>
+
+    <form id="searchForm" style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+        <div style="position: relative; width: 220px;">
+            <input type="text" name="q" id="searchInput" placeholder="Search Checkpoint..." value="{{ request.GET.q }}"
+                style="padding: 8px 30px 8px 8px; width: 100%; border: 1px solid #ccc; border-radius: 5px;">
+            <span id="clearSearch" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #aaa; font-weight: bold; font-size: 18px;">✖</span>
+        </div>
+        <button type="submit" style="padding: 8px 15px; background-color: #062A63; color: #fff; border: none; border-radius: 5px;">Search</button>
+    </form>
+</div>
+
+<div id="platformError" class="error-message"></div>
+
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between;">
+            <h2>Add Checkpoint</h2>
+            <span class="close">&times;</span>
+        </div>
+
+        <form id="addForm" method="post" action="{% url 'Check' %}" enctype="multipart/form-data" class="form-group">
+            {% csrf_token %}
+            <!-- Part Selection -->
+            <div class="form-group">
+                <label for="model_id">Part</label>
+                <select id="model_id" name="model_id" required style="width: 100%;">
+                    <option value="">Select Part</option>
+                    {% for model in models %}
+                        <option value="{{ model.id }}" data-description="{{ model.model_description }}" {% if model.id == selected_model_id %}selected{% endif %}>
+                            {{ model.model_code }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!--  (readonly) -->
+            <div class="form-group">
+                <label for="model_description">Part Name</label>
+                <input type="text" id="model_description" name="model_description" readonly style="width: 100%; background: #f5f5f5;" value="">
+            </div>
+            <!-- PART Selection -->
+            <div class="form-group">
+                <label for="part_dropdown">Select a Ferrules</label>
+                <select id="part_dropdown" name="part_dropdown" required style="width: 100%;">
+                    <option value="">Select a Ferrules</option>
+                    {% for part in parts %}
+                        <option value="{{ part.id }}" {% if part.id == selected_part_id %}selected{% endif %}>
+                            {{ part.part_name }} ({{ part.part_no }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- CHECKPOINT NAME -->
+            <div class="form-group">
+                <label for="checkpoint">Checkpoint</label>
+                {{ form.checkpoint }}
+            </div>
+            <!-- IMAGE UPLOAD -->
+            <div class="form-group">
+                <label for="id_image_path">Upload Image</label>
+                <input type="file" name="image_path" id="id_image_path">
+                <div style="margin-top:8px; display: flex; align-items: center; gap: 8px;">
+                    <label for="removeImageCheckbox" style="font-size:14px; color:#d9534f; margin:0;">Deselect</label>
+                    <input type="checkbox" id="removeImageCheckbox" name="remove_image" value="1" style="margin:0;">
+                    
+                </div>
+            </div>
+            <input type="hidden" name="record_id" value="{{ record_id|default:'' }}">
+            <!-- IMAGE PROCESSING TYPE -->
+            <div class="form-group">
+                <label for="image_processing_type">Image Processing Type</label>
+                <select id="image_processing_type" name="image_processing_type" style="width: 100%;">
+                    <option value="">Select Image Processing Type</option>
+                    {% for ip in image_processing_types %}
+                        <option value="{{ ip.id }}" {% if ip.id == selected_image_processing_type_id %}selected{% endif %}>{{ ip.image_process }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="action-buttons">
+                <button type="submit" class="edit">Save</button>
+                <button type="reset" class="delete" id="cancelButton">Cancel</button>
+            </div>
+            {% if form.errors %}
+                <p class="error-message">{{ form.errors }}</p>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+
+<form id="checkpointsBulkForm" method="post" action="{% url 'remove_checkpoints' %}">
+    {% csrf_token %}
+    <table class="data-table">
+    <thead>
+        <tr>
+            <th>Part</th>
+            <th>Part Name</th>
+            <th>Ferrules No</th>
+            <th>Ferrules Name</th>
+            <th>Checkpoint</th>
+            <th>Image</th>
+            {% if user.is_superuser %}
+           <th>Edit</th>
+            <th>Delete</th>
+            <th>
+                <input type="checkbox" id="selectAllCheckbox" title="Select All">
+                Select
+            </th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody id="checkpointTableBody">
+        {% for item in data %}
+        <tr>
+            <td>{{ item.model_code }}</td>
+            <td>{{ item.model_description }}</td>
+            <td>{{ item.part_no }}</td>
+            <td>{{ item.part_name }}</td>
+            <td>{{ item.checkpoint }}</td>
+            <td>
+                {% if item.image %}
+                    <a href="#" onclick="event.preventDefault(); openImageModal('{{ item.image }}'); document.body.style.overflow='hidden'; return false;" class="action-buttons" style="color: #062A63; font-size: 20px;">
+                        View
+                    </a>
+                {% else %}
+                    No Image
+                {% endif %}
+            </td>
+            {% if user.is_superuser %}
+
+            <td><a href="#" class="edit-btn action-buttons" data-id="{{ item.pk }}">Edit</a></td>
+            <td><a href="#" class="delete-btn action-buttons" data-id="{{ item.pk }}">Delete</a></td>
+            <td><input type="checkbox" class="row-checkbox" name="bulk_delete[]" value="{{ item.pk }}"></td>
+            {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="9">No data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+    <div style="margin-top: 10px; margin-bottom: 30px; text-align: center;">
+        <button type="button" id="bulkDeleteBtn" class="btn btn-danger">Delete Selected</button>
+    </div>
+</form>
+
+    <!-- Image Modal for viewing images -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeImageModal()">&times;</span>
+            <img id="modalImage" src="" alt="Checkpoint Image">
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Toastr -->
+<script src="{% static 'node_modules/toastr/build/toastr.min.js' %}"></script>
+
+<!-- Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+
+<script>
+// Remove Image checkbox logic
+document.addEventListener('DOMContentLoaded', function () {
+    const removeImageCheckbox = document.getElementById('removeImageCheckbox');
+    const imageInput = document.getElementById('id_image_path');
+    if (removeImageCheckbox && imageInput) {
+        removeImageCheckbox.addEventListener('change', function () {
+            if (removeImageCheckbox.checked) {
+                imageInput.value = '';
+            }
+        });
+        imageInput.addEventListener('change', function () {
+            if (imageInput.value) {
+                removeImageCheckbox.checked = false;
+            }
+        });
+    }
+});
+function openImageModal(imageUrl) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modalImg.src = imageUrl;
+    modal.style.display = 'flex';
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.style.display = 'none';
+    const modalImg = document.getElementById('modalImage');
+    modalImg.src = '';
+    document.body.style.overflow = '';
+}
+    // Initialize Select2 for model dropdown
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('#modelDropdown').select2({
+                placeholder: "Select Part",
+                allowClear: true,
+                width: 'resolve'
+            });
+        }
+    });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var selectAll = document.getElementById('selectAllCheckbox');
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            var checked = this.checked;
+            document.querySelectorAll('.row-checkbox').forEach(function (cb) {
+                cb.checked = checked;
+            });
+        });
+    }
+
+    var bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    var bulkForm = document.getElementById('checkpointsBulkForm');
+    if (bulkDeleteBtn && bulkForm) {
+        bulkDeleteBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var checkedBoxes = bulkForm.querySelectorAll('.row-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                Swal.fire({ icon: 'warning', text: 'Please select at least one Checkpoint to delete.' });
+                return;
+            }
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'Selected Checkpoints will be permanently deleted.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete them!'
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    var formData = new FormData(bulkForm);
+                    fetch(bulkForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ icon: 'success', text: data.message || 'Selected checkpoints deleted.' });
+                            checkedBoxes.forEach(cb => { var row = cb.closest('tr'); if (row) row.remove(); });
+                            // Reset the select-all checkbox and indeterminate state after deletion
+                            const selectAll = document.getElementById('selectAllCheckbox');
+                            if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+                            // If no rows remain, optionally show a no-data message
+                            const anyRows = document.querySelectorAll('.row-checkbox').length > 0;
+                            if (!anyRows) {
+                                const tbody = document.getElementById('checkpointTableBody');
+                                if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No data available.</td></tr>';
+                            }
+                        } else {
+                            Swal.fire({ icon: 'error', text: data.message || 'Bulk delete failed.' });
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire({ icon: 'error', text: 'An error occurred while deleting.' });
+                    });
+                }
+            });
+        });
+    }
+});
+</script>
+<script>
+    // AJAX search for checkpoints
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const query = searchInput.value;
+            let url = '{% url "Check" %}?ajax=1';
+            const platformId = document.getElementById('platform-select').value;
+                const modelId = document.getElementById('modelDropdown').value;
+            if (platformId) {
+                url += `&platform_id=${platformId}`;
+            }
+                if (modelId) {
+                    url += `&model_id=${modelId}`;
+                }
+            if (query) {
+                url += `&q=${encodeURIComponent(query)}`;
+            }
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTable = doc.querySelector('.data-table');
+                    if (newTable) {
+                        document.querySelector('.data-table').innerHTML = newTable.innerHTML;
+                        bindEditAndDeleteButtons();
+                    }
+                });
+        });
+    });
+    // JavaScript code to handle modal and form submission
+    const addButton = document.getElementById('addButton');
+    const modal = document.getElementById('myModal');
+    const closeModal = document.querySelector('.close');
+    const cancelBtn = document.querySelector('.delete');
+    const partDropdown = document.getElementById('part_dropdown');
+    // Removed platformDropdown and platformIdHidden logic
+
+    // Initialize Select2 for part dropdown only
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedPartId = localStorage.getItem('selectedPartId');
+        if (savedPartId) {
+            partDropdown.value = savedPartId;
+        }
+        $('#part_dropdown').select2({
+            placeholder: "Select a Ferrules",
+            allowClear: true
+        });
+        // Initialize Select2 for image_processing_type with search enabled and limited dropdown height
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('#image_processing_type').select2({
+                placeholder: "Select Image Processing Type",
+                allowClear: true,
+                width: 'resolve',
+                dropdownCssClass: 'limited-height-select2'
+            });
+        }
+    });
+
+    addButton.addEventListener('click', () => {
+        // Pre-Select Part in modal based on main dropdown
+        const mainModelDropdown = document.getElementById('modelDropdown');
+        const modalModelDropdown = document.getElementById('model_id');
+        if (mainModelDropdown && modalModelDropdown) {
+          modalModelDropdown.value = mainModelDropdown.value;
+          // Trigger change event to update description
+          modalModelDropdown.dispatchEvent(new Event('change'));
+        }
+        if (partDropdown) {
+          partDropdown.disabled = false;
+          partDropdown.value = '';
+          if(typeof $ !== 'undefined' && $.fn.select2){
+            $('#part_dropdown').val('').trigger('change');
+          }
+        }
+        const checkpointInput = document.getElementById('id_checkpoint');
+        if (checkpointInput) checkpointInput.value = '';
+                const recordId = document.querySelector('input[name="record_id"]');
+                if (recordId) recordId.value = '';
+                // Ensure modal shows Add state (not leftover Edit state)
+                const header = document.querySelector('.modal-content h2');
+                if (header) header.textContent = 'Add Checkpoint';
+                const addForm = document.getElementById('addForm');
+                if (addForm) addForm.action = "{% url 'Check' %}";
+                // Initialize Select2 for image_processing_type dropdown on add
+                const imageProcessingDropdown = document.getElementById('image_processing_type');
+                if (imageProcessingDropdown && typeof $ !== 'undefined' && $.fn.select2) {
+                    $('#image_processing_type').val('').trigger('change');
+                    $('#image_processing_type').select2({
+                        placeholder: "Select Image Processing Type",
+                        allowClear: true,
+                        width: 'resolve'
+                    });
+                }
+        modal.style.display = 'flex';
+    });
+
+
+    closeModal.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    // Save selected dropdown options
+    partDropdown.addEventListener('change', function () {
+        const selectedPartId = this.value;
+        localStorage.setItem('selectedPartId', selectedPartId);
+    });
+
+    // No platform dropdown logic needed
+
+    const editCheckOpen = '{{ edit_Check_open }}';
+    if (editCheckOpen) {
+        modal.style.display = 'block';
+    }
+
+    // Clear search functionality
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.getElementById("searchInput");
+        const clearBtn = document.getElementById("clearSearch");
+
+        clearBtn.addEventListener("click", function (e) {
+            input.value = '';
+            input.focus();
+
+            // clearBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+                // Always show all results for selected platform and model
+                let url = '{% url "Check" %}?ajax=1';
+                const platformId = document.getElementById('platform-select').value;
+                const modelId = document.getElementById('modelDropdown').value;
+                if (platformId) {
+                    url += `&platform_id=${platformId}`;
+                }
+                if (modelId) {
+                    url += `&model_id=${modelId}`;
+                }
+                // No query param, so show all
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const newTable = doc.querySelector('.data-table');
+                        if (newTable) {
+                            document.querySelector('.data-table').innerHTML = newTable.innerHTML;
+                            bindEditAndDeleteButtons();
+                        }
+                    });
+        // });
+
+        });
+    });
+
+    function showToast(message, type = 'success') {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: type,
+            title: message,
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+    }
+
+    // Edit handler
+    function handleEdit(e) {
+        e.preventDefault();
+        const pk = this.getAttribute('data-id');
+        fetch(`/Check_edit/${pk}/`, {
+            headers: { 'x-requested-with': 'XMLHttpRequest' }
+        })
+            .then(res => {
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        throw new Error('Checkpoint not found. It may have been deleted.');
+                    }
+                    throw new Error('Failed to load Checkpoint data.');
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('id_checkpoint').value = data.checkpoint;
+                    partDropdown.value = data.part_id;
+                    $('#part_dropdown').trigger('change'); // Update Select2
+                    partDropdown.disabled = true; // 🔹 disable part_id when editing
+                    // Set model dropdown value
+                    const modelDropdown = document.getElementById('model_id');
+                    if (modelDropdown && data.model_id) {
+                        modelDropdown.value = data.model_id;
+                        // Trigger change event to update description
+                        modelDropdown.dispatchEvent(new Event('change'));
+                    }
+                    // Set image processing type dropdown value (allow clearing, support Select2)
+                    const imageProcessingDropdown = document.getElementById('image_processing_type');
+                    if (imageProcessingDropdown) {
+                        if (typeof $ !== 'undefined' && $.fn.select2) {
+                            $('#image_processing_type').val(data.image_processing_type_id || '').trigger('change');
+                        } else {
+                            imageProcessingDropdown.value = data.image_processing_type_id || '';
+                        }
+                    }
+                    document.querySelector('input[name="record_id"]').value = pk;
+                    document.querySelector('.modal-content h2').textContent = 'Edit Checkpoint';
+                    document.getElementById('addForm').action = `/Check_edit/${pk}/`;
+                    modal.style.display = 'block';
+                } else {
+                    showToast('Could not load Checkpoint data.', 'error');
+                }
+            })
+            .catch((error) => {
+                showToast(error.message || 'Unexpected error while loading data.', 'error');
+                // If the record doesn't exist, remove the row from the table
+                if (error.message.includes('not found')) {
+                    const row = this.closest('tr');
+                    if (row) {
+                        row.remove();
+                        showToast('Row removed as it no longer exists.', 'info');
+                    }
+                }
+            });
+    }
+
+    // Delete handler
+    function handleDelete(e) {
+        e.preventDefault();
+        const pk = this.getAttribute('data-id');
+        const row = this.closest('tr');
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This action cannot be undone!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/Check_delete/${pk}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'x-requested-with': 'XMLHttpRequest'
+                    }
+                })
+                    .then(res => {
+                        if (!res.ok) {
+                            if (res.status === 404) {
+                                // Record doesn't exist, remove the row anyway
+                                row.remove();
+                                showToast('Record was already deleted. Row removed from table.', 'info');
+                                return;
+                            }
+                            throw new Error('Failed to delete record.');
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (data && data.success) {
+                            row.remove();
+                            showToast(data.message || 'Deleted successfully.', 'success');
+                            // Reset the select-all checkbox if needed
+                            const selectAll = document.getElementById('selectAllCheckbox');
+                            if (selectAll) {
+                                // If no more checked rows, uncheck header
+                                const anyChecked = document.querySelectorAll('.row-checkbox:checked').length > 0;
+                                if (!anyChecked) { selectAll.checked = false; selectAll.indeterminate = false; }
+                            }
+                            // If table is empty, show a 'No data' row
+                            const anyRows = document.querySelectorAll('.row-checkbox').length > 0;
+                            if (!anyRows) {
+                                const tbody = document.getElementById('checkpointTableBody');
+                                if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No data available.</td></tr>';
+                            }
+                        } else if (data) {
+                            showToast(data.message || 'Could not delete.', 'error');
+                        }
+                    })
+                    .catch((error) => showToast(error.message || 'Unexpected error occurred.', 'error'));
+            }
+        });
+    }
+
+    function bindEditAndDeleteButtons() {
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.removeEventListener('click', handleEdit);
+            btn.addEventListener('click', handleEdit);
+            // Restore style
+            btn.style.color = '#062A63';
+            btn.style.fontSize = '20px';
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.removeEventListener('click', handleDelete);
+            btn.addEventListener('click', handleDelete);
+            // Restore style
+            btn.style.color = 'red';
+            btn.style.fontSize = '20px';
+        });
+    }
+
+    // Initial bind
+    bindEditAndDeleteButtons();
+
+    // Submit handler
+    document.getElementById('addForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const form = this;
+        const recordId = document.querySelector('input[name="record_id"]').value;
+        const url = recordId ? `/Check_edit/${recordId}/` : "{% url 'Check' %}";
+        const formData = new FormData(form);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                'x-requested-with': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    modal.style.display = 'none';
+                    form.reset();
+                    document.querySelector('input[name="record_id"]').value = '';
+
+                    // Update table after add
+                    fetchConnectedCheckpoints();
+                } else {
+                    showToast(data.error || 'Form invalid', 'error');
+                }
+            })
+            .catch(() => {
+                showToast('Unexpected error occurred.', 'error');
+            });
+    });
+
+
+
+    // Fetch checkpoints based only on selected model
+    function fetchConnectedCheckpoints() {
+        const modelId = document.getElementById('modelDropdown').value;
+        if (!modelId) {
+            document.getElementById('checkpointTableBody').innerHTML = '<tr><td colspan="9">Please select a Part.</td></tr>';
+            return;
+        }
+        let url = `/get_connected_checkpoints/?model_id=${modelId}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const checkpointTableBody = document.getElementById('checkpointTableBody');
+                checkpointTableBody.innerHTML = '';
+                if (data.length === 0) {
+                    checkpointTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align: center;">No data available.</td>
+                        </tr>`;
+                } else {
+                    data.forEach((checkpoint, index) => {
+                        const sanitizedRow = `
+                            <tr>
+                                <td>${checkpoint.model_code || ''}</td>
+                                <td>${checkpoint.model_description || ''}</td>
+                                <td>${checkpoint.part_no || ''}</td>
+                                <td>${checkpoint.part_name || ''}</td>
+                                <td>${checkpoint.checkpoint || ''}</td>
+                                <td>
+                                ${checkpoint.image
+                                    ? `<a href=\"#\" onclick=\"event.preventDefault(); openImageModal('${checkpoint.image.startsWith('http') || checkpoint.image.startsWith('/') ? checkpoint.image : '/media/' + checkpoint.image}'); document.body.style.overflow='hidden'; return false;\" style=\"color: #062A63; font-size: 20px;\">View</a>`
+                                    : 'No Image'}
+                                </td>
+                                {% if user.is_superuser %}
+
+                                <td style=\"text-align: center;\">
+                                    <a href=\"#\" class=\"edit-btn action-buttons\" data-id=\"${checkpoint.pk}\" style=\"color: #062A63; font-size: 20px;\">Edit</a>
+                                </td>
+                                <td style=\"text-align: center;\">
+                                    <a href=\"#\" class=\"delete-btn action-buttons\" data-id=\"${checkpoint.pk}\" style=\"color: red; font-size: 20px;\">Delete</a>
+                                </td>
+                                <td><input type="checkbox" class=\"row-checkbox\" name="bulk_delete[]" value="${checkpoint.pk}"></td>
+                                {%  endif  %}
+                            </tr>
+                        `;
+                        checkpointTableBody.insertAdjacentHTML('beforeend', sanitizedRow);
+                    });
+                    bindEditAndDeleteButtons();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching Checkpoints:', error);
+                showToast('Error loading Checkpoints', 'error');
+            });
+    }
+
+    // Make function globally available
+    window.fetchConnectedCheckpoints = fetchConnectedCheckpoints;
+
+    // Add event listener for model dropdown (Select2 compatible)
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        $('#modelDropdown').on('change', fetchConnectedCheckpoints);
+    } else {
+        document.getElementById('modelDropdown').addEventListener('change', fetchConnectedCheckpoints);
+    }
+    window.fetchConnectedCheckpoints = fetchConnectedCheckpoints;
+
+    // Removed legacy platformDropdown logic
+
+document.addEventListener('DOMContentLoaded', function () {
+  const addButton = document.getElementById('addButton');
+  const modal = document.getElementById('myModal');
+  const closeModal = modal.querySelector('.close');
+  const cancelBtn = document.getElementById('cancelButton');
+  const partDropdown = document.getElementById('part_dropdown');
+
+  addButton.addEventListener('click', () => {
+    // Pre-Select Part in modal based on main dropdown
+    const mainModelDropdown = document.getElementById('modelDropdown');
+    const modalModelDropdown = document.getElementById('model_id');
+    if (mainModelDropdown && modalModelDropdown) {
+      modalModelDropdown.value = mainModelDropdown.value;
+      // Trigger change event to update description
+      modalModelDropdown.dispatchEvent(new Event('change'));
+    }
+    if (partDropdown) {
+      partDropdown.disabled = false;
+      partDropdown.value = '';
+      if(typeof $ !== 'undefined' && $.fn.select2){
+        $('#part_dropdown').val('').trigger('change');
+      }
+    }
+    const checkpointInput = document.getElementById('id_checkpoint');
+    if (checkpointInput) checkpointInput.value = '';
+        const recordId = document.querySelector('input[name="record_id"]');
+        if (recordId) recordId.value = '';
+        // Ensure modal shows Add state (not leftover Edit state)
+        const header = document.querySelector('.modal-content h2');
+        if (header) header.textContent = 'Add Checkpoint';
+        const addForm = document.getElementById('addForm');
+        if (addForm) addForm.action = "{% url 'Check' %}";
+        modal.style.display = 'flex';
+  });
+
+  closeModal.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+//   window.addEventListener('click', (event) => {
+//     if (event.target === modal) modal.style.display = 'none';
+//   });
+});
+    
+</script>
+<script>
+// Auto-fill model description when model is selected
+    document.addEventListener('DOMContentLoaded', function () {
+        var modelDropdown = document.getElementById('model_id');
+        var modelDescription = document.getElementById('model_description');
+        function updateModelDescription() {
+            var selected = modelDropdown.options[modelDropdown.selectedIndex];
+            var desc = selected.getAttribute('data-description') || '';
+            modelDescription.value = desc;
+        }
+        modelDropdown.addEventListener('change', updateModelDescription);
+        updateModelDescription(); // Initial fill
+    });
+</script>
+
+{% endblock %}

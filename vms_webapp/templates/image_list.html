@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Page</title>
+    <meta name="description" content="Admin Page Description">
+    {% load static %}
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" /> -->
+    <title>Model and Part Selection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        .dropdown {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .dropdown button {
+            background-color: #062A63;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown button:hover {
+            background-color: #2980b9;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            width: 100%;
+            top: calc(100% + 10px);
+            left: 0;
+            border: 1px solid #ddd;
+            padding: 10px;
+            z-index: 1;
+            max-height: 200px; /* Limit dropdown height */
+            overflow-y: auto; /* Enable vertical scrollbar */
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-content label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .dropdown-content label input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        #saveButton {
+            background-color: #062A63;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: block;
+            margin: 20px auto;
+        }
+
+        #saveButton:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="modelPartForm" method="post" action="{% url 'model_part_selection' %}">
+            {% csrf_token %}
+            <div class="dropdown">
+                <button id="modelButton">Select Part</button>
+                <div class="dropdown-content">
+                    <label><input type="checkbox" name="selectModelAll" id="selectModelAll">Select/Deselect All</label>
+                    {% for model in models %}
+                        <label><input type="checkbox" name="selectedModels" value="{{ model.id }}" multiple>{{ model.model_code }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="dropdown">
+                <button id="partButton">Select Part</button>
+                <div class="dropdown-content">
+                    <label><input type="checkbox" name="selectPartAll" id="selectPartAll">Select/Deselect All</label>
+                    {% for part in parts %}
+                        <label><input type="checkbox" name="selectedParts" value="{{ part.id }}" multiple>{{ part.part_name }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            <button id="saveButton" type="submit">Save</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,635 @@
+{% extends 'base.html' %}
+  <title>{% block title %} Admin Page {% endblock %}</title>
+  {% block extra_css %}
+  <style>
+    .fixed-card {
+      height: 300px;
+      display: flex;
+      flex-direction: column;
+    }
+    .fixed-card .card-body {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+    .card-header {
+      background-color: #062A63;
+      color: #fff;
+      position: relative;
+    }
+    .card-header h5 {
+      text-align: center;
+      width: 100%;
+      margin: 0;
+    }
+    .add-btn {
+      position: absolute;
+      top: 50%;
+      right: 1rem;
+      transform: translateY(-50%);
+    }
+    .delete-btn {
+      font-size: 0.875rem;
+    }
+    thead.custom-head {
+      background-color: #062A63;
+      color: #fff;
+    }
+    .modal {
+      z-index: 1050;
+    }
+  </style>
+  {% endblock %}
+
+  {% block content %}
+
+<div class="container mt-3">
+
+  <div class="row mt-2">
+    <!-- Severity Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Severities</h5>
+          <button id="addSeverityBtn" class="btn btn-light btn-sm add-btn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div class="card-body">
+          {% if severities %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Severity</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in severities %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.severity }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_severity' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.severity }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}<p class="text-muted text-center">No severities found.</p>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Locations</h5>
+          <button id="addLocationBtn" class="btn btn-light btn-sm add-btn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div class="card-body">
+          {% if locations %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Location</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in locations %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.location }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_location' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.location }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}<p class="text-muted text-center">No locations found.</p>{% endif %}
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- Attribute Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Attributes</h5>
+          <button id="addAttributeBtn" class="btn btn-light btn-sm add-btn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div class="card-body">
+          {% if attributes %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Attribute</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in attributes %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.attribute }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_attribute' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.attribute }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}<p class="text-muted text-center">No attributes found.</p>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <!-- Concern Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Concerns</h5>
+          <button id="addConcernBtn" class="btn btn-light btn-sm add-btn">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="card-body">
+          {% if concerns %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Concern</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in concerns %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.concern }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_concern' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.concern }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-muted text-center">No concerns found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Highlight Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Highlights</h5>
+          <button id="addHighlightBtn" class="btn btn-light btn-sm add-btn">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="card-body">
+          {% if highlights %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Highlight</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in highlights %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.highlight }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_highlight' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.highlight }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-muted text-center">No highlights found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- User Level Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All User Levels</h5>
+          <button id="addUserLevelBtn" class="btn btn-light btn-sm add-btn">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="card-body">
+          {% if user_levels %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>User Level</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in user_levels %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.user }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_user_level' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.user }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-muted text-center">No user levels found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW ROW: Label Type, Ferrule Direction, Burden -->
+  <div class="row mt-3">
+    <!-- Label Type Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Label Types</h5>
+          <button id="addLabelTypeBtn" class="btn btn-light btn-sm add-btn">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="card-body">
+          {% if label_types %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Label Type</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in label_types %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.label_type }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_label_type' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.label_type }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-muted text-center">No label types found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Ferrule Direction Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Ferrule Directions</h5>
+          <button id="addFerruleDirectionBtn" class="btn btn-light btn-sm add-btn">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="card-body">
+          {% if ferrule_directions %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Direction</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in ferrule_directions %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.direction }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_ferrule_direction' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.direction }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-muted text-center">No ferrule directions found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Burden Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Burdens</h5>
+          <button id="addBurdenBtn" class="btn btn-light btn-sm add-btn">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="card-body">
+          {% if burdens %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Burden</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in burdens %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.burden }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_burden' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.burden }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-muted text-center">No burdens found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mt-3">
+      <div class="col-md-4">
+        <div class="card shadow fixed-card">
+          <div class="card-header">
+            <h5>All Ratios</h5>
+            <button id="addRatioBtn" class="btn btn-light btn-sm add-btn"><i class="fas fa-plus"></i> Add</button>
+          </div>
+          <div class="card-body">
+            {% if ratios %}
+            <table class="table table-bordered table-hover align-middle text-center">
+              <thead class="custom-head">
+                <tr><th>#</th><th>Ratio</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                {% for item in ratios %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ item.ratio }}</td>
+                  <td>
+                    <form method="POST" action="{% url 'delete_ratio' item.pk %}" onsubmit="return confirm('Delete {{ item.ratio }}?');">
+                      {% csrf_token %}
+                      <button class="btn btn-danger btn-sm delete-btn">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}<p class="text-muted text-center">No Ratios found</p>{% endif %}
+          </div>
+        </div>
+      </div>
+  </div>
+
+</div>
+
+<!-- Existing Modals -->
+<!-- Add Highlight Modal -->
+<div id="highlightModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Highlight</h5>
+      <form method="post" action="{% url 'add_highlight' %}">{% csrf_token %}
+        <input type="text" name="highlight" class="form-control mb-2" placeholder="Highlight Name" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelHighlight">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Severity Modal -->
+<div id="severityModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Severity</h5>
+      <form method="post" action="{% url 'add_severity' %}">{% csrf_token %}
+        <input type="text" name="severity" class="form-control mb-2" placeholder="Severity Name" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelSeverity">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Location Modal -->
+<div id="locationModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Location</h5>
+      <form method="post" action="{% url 'add_location' %}">{% csrf_token %}
+        <input type="text" name="location" class="form-control mb-2" placeholder="Location Name" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelLocation">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Attribute Modal -->
+<div id="attributeModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Attribute</h5>
+      <form method="post" action="{% url 'add_attribute' %}">{% csrf_token %}
+        <input type="text" name="attribute" class="form-control mb-2" placeholder="Attribute Name" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelAttribute">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Concern Modal -->
+<div id="concernModal" class="modal fade show" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Concern</h5>
+      <form method="post" action="{% url 'add_concern' %}">{% csrf_token %}
+        <input type="text" name="concern" class="form-control mb-2" placeholder="Concern Name" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelConcern">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add User Level Modal -->
+<div id="userLevelModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add User Level</h5>
+      <form method="post" action="{% url 'add_user_level' %}">
+        {% csrf_token %}
+        <input type="text" name="user_level" class="form-control mb-2" placeholder="User Level" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelUserLevel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- NEW MODALS -->
+<!-- Add Label Type Modal -->
+<div id="labelTypeModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Label Type</h5>
+      <form method="post" action="{% url 'add_label_type' %}">
+        {% csrf_token %}
+        <input type="text" name="label_type" class="form-control mb-2" placeholder="Label Type" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelLabelType">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Ferrule Direction Modal -->
+<div id="ferruleDirectionModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Ferrule Direction</h5>
+      <form method="post" action="{% url 'add_ferrule_direction' %}">
+        {% csrf_token %}
+        <input type="text" name="direction" class="form-control mb-2" placeholder="Direction" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelFerruleDirection">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Burden Modal -->
+<div id="burdenModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Burden</h5>
+      <form method="post" action="{% url 'add_burden' %}">
+        {% csrf_token %}
+        <input type="text" name="burden" class="form-control mb-2" placeholder="Burden" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelBurden">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="ratioModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Ratio</h5>
+      <form method="post" action="{% url 'add_ratio' %}">
+        {% csrf_token %}
+        <input type="text" name="ratio" class="form-control mb-2" placeholder="Ratio" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelRatio">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+  // Existing button handlers
+  document.getElementById("addConcernBtn").onclick = () => document.getElementById("concernModal").style.display = "block";
+  document.getElementById("addHighlightBtn").onclick = () => document.getElementById("highlightModal").style.display = "block";
+  document.getElementById("addSeverityBtn").onclick = () => document.getElementById("severityModal").style.display = "block";
+  document.getElementById("addLocationBtn").onclick = () => document.getElementById("locationModal").style.display = "block";
+  document.getElementById("addAttributeBtn").onclick = () => document.getElementById("attributeModal").style.display = "block";
+  document.getElementById("addUserLevelBtn").onclick = () => document.getElementById("userLevelModal").style.display = "block";
+  
+  // NEW button handlers
+  document.getElementById("addLabelTypeBtn").onclick = () => document.getElementById("labelTypeModal").style.display = "block";
+  document.getElementById("addRatioBtn").onclick = () => document.getElementById("ratioModal").style.display = "block";
+  document.getElementById("addFerruleDirectionBtn").onclick = () => document.getElementById("ferruleDirectionModal").style.display = "block";
+  document.getElementById("addBurdenBtn").onclick = () => document.getElementById("burdenModal").style.display = "block";
+
+  // Existing cancel handlers
+  document.getElementById("cancelSeverity").onclick = () => document.getElementById("severityModal").style.display = "none";
+  document.getElementById("cancelLocation").onclick = () => document.getElementById("locationModal").style.display = "none";
+  document.getElementById("cancelAttribute").onclick = () => document.getElementById("attributeModal").style.display = "none";
+  document.getElementById("cancelConcern").onclick = () => document.getElementById("concernModal").style.display = "none";
+  document.getElementById("cancelHighlight").onclick = () => document.getElementById("highlightModal").style.display = "none";
+  document.getElementById("cancelUserLevel").onclick = () => document.getElementById("userLevelModal").style.display = "none";
+  
+  // NEW cancel handlers
+  document.getElementById("cancelLabelType").onclick = () => document.getElementById("labelTypeModal").style.display = "none";
+  document.getElementById("cancelRatio").onclick = () => document.getElementById("ratioModal").style.display = "none";
+  document.getElementById("cancelFerruleDirection").onclick = () => document.getElementById("ferruleDirectionModal").style.display = "none";
+  document.getElementById("cancelBurden").onclick = () => document.getElementById("burdenModal").style.display = "none";
+
+  // Window click to close modals
+  window.onclick = function(e) {
+    const modalIds = [
+      'severityModal', 'locationModal', 'attributeModal', 'concernModal', 
+      'highlightModal', 'userLevelModal', 'labelTypeModal','ratioModal', 'ferruleDirectionModal', 'burdenModal'
+    ];
+    modalIds.forEach(id => {
+      if (e.target === document.getElementById(id)) {
+        document.getElementById(id).style.display = "none";
+      }
+    });
+  }
+</script>
+
+{% if messages %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for message in messages %}
+        alert("{{ message|escapejs }}");
+        {% endfor %}
+    });
+</script>
+{% endif %}
+
+{% endblock %}

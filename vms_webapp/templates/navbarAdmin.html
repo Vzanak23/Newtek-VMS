@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {% load static %}
+    <!-- Bootstrap CSS -->
+    <!-- <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"> -->
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+<link rel="stylesheet" href="{% static 'node_modules/bootstrap/dist/css/bootstrap.min.css' %}">
+    <title>Admin Page</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-sm custom-navbar navbar-dark">
+        <!-- <a class="navbar-brand" href="#">Welcome Admin</a> -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item" id="plat">
+                <a href="{% url 'PlatForm' %}" class="nav-link">Client</a>
+            </li>
+            <li class="nav-item" id="model">
+                <a href="{% url 'model' %}" class="nav-link">Part</a>
+            </li>
+            <li class="nav-item" id="part">
+                <a href="{% url 'part' %}" class="nav-link">Part Name</a>
+            </li>
+            <li class="nav-item" id="check">
+                <a href="{% url 'Check' %}" class="nav-link">Checkpoints</a>
+            </li>
+            <li class="nav-item" id="emp_model">
+                <a href="{% url 'model_part_selection' %}" class="nav-link">Parts Connection</a>
+            </li>
+
+            <!-- <li class="nav-item" id="IMG">
+                <a class="nav-link" href="{% url 'Image_pro' %}">Image Processing Screen</a>
+            </li> -->
+            
+            <li class="nav-item" id="emp_master">
+                <a href="{% url 'employee_master' %}" class="nav-link">Employee Master</a>
+            </li>
+            <li class="nav-item dropdown" id="emp1_report">
+                <a class="nav-link dropdown-toggle" href="#" id="empReportDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Reports
+                </a>
+                <div class="dropdown-menu" aria-labelledby="empReportDropdown">
+                    <a class="dropdown-item" href="{% url 'report_screens' %}">VIN Detail Report</a>
+                    <a class="dropdown-item" href="{% url 'analytical_report' %}">Highlight Report</a>
+                    <a class="dropdown-item" href="{% url 'vehicle_report' %}">Vehicle Report</a>
+                </div>
+            </li>
+
+            <li class="nav-item" id="shift">
+                <a class="nav-link" href="{% url 'admin_shift' %}">Shift</a>
+            </li>
+          </ul>
+          
+        
+          <form class="form-inline my-2 my-lg-0">
+            <div class="live-clock"  style="margin-right: 15px;">        
+                <span id="date">DD/MM/YYYY</span>
+                <span id="clock">00:00:00</span>
+            </div>
+            <a class="btn btn-outline-success my-2 my-sm-0" href="{% url 'logout' %}" style="margin-left: 15px;">Logout</a> 
+        </form>
+        </div>
+    </nav>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          // Get the current URL path
+          var currentUrl = window.location.pathname;
+  
+          // Define the mapping between URL paths and menu IDs
+          var menuMapping = {
+              '/PlatForm/':'plat',
+              '/model/': 'model',
+              '/part/': 'part',
+              '/Check/': 'check',
+              '/employee_master/': 'emp_master',
+              '/model_part_selection/': 'emp_model',
+              '/Report_screen/': 'emp_report',
+              '/admin_shift/': 'shift',
+              '/Image_pro/': 'IMG',
+              // Add mappings for other menu items
+          };
+  
+          // Find the corresponding menu item and mark it as active
+          var menuItemId = menuMapping[currentUrl];
+          if (menuItemId) {
+              var menuItem = document.getElementById(menuItemId);
+              if (menuItem) {
+                  menuItem.classList.add('active');
+              }
+          }
+      });
+
+      function updateClock() {
+        const clock = document.getElementById("clock");
+        const date = document.getElementById("date");
+        const now = new Date();
+
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        clock.textContent = `${hours}:${minutes}:${seconds}`; 
+
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        date.textContent = `${day}/${month}/${year}`;
+
+    }
+
+    setInterval(updateClock, 1000); // Update the clock every second
+    updateClock(); // Initial call to display the time immediately
+    
+        function toggleSidebar() {
+            var sidebar = document.getElementById("sidebar");
+            if (sidebar.style.display === "none" || sidebar.style.display === "") {
+                sidebar.style.display = "block";
+            } else {
+                sidebar.style.display = "none";
+            }
+        }
+
+
+
+  </script>
+  <!-- Required JS for Bootstrap dropdowns -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
+
+<!-- Bootstrap JS bundle (includes Popper) -->
+<script src="{% static 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- OR if you want separate JS + Popper (not recommended) -->
+<script src="{% static 'node_modules/@popperjs/core/dist/umd/popper.min.js' %}"></script>
+<script src="{% static 'node_modules/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+  </body>
+</html>

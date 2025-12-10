@@ -1,0 +1,97 @@
+
+    {% extends 'base.html' %}
+    <title>{% block title %} Report Screen {% endblock %}</title>
+<!-- </head>
+<body> -->
+    {% block content %}
+    <h1>Report Screen</h1>
+    
+    <button id="fetchButton">Show Data</button>
+    
+    <table border="1" id="dataTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>QR Code</th>
+                <th>Part</th>
+                <th>QC No</th>
+                <th>Part No</th>
+                <th>Part Name</th>
+                <th>Answer</th>
+                <th>Checkpoint</th>
+                <th>Severity</th>
+                <th>Highlight</th>
+                <th>Attribute</th>
+                <th>Location</th>
+                <th>Concern</th>
+                <th>OCR Operation</th>
+                <th>Remark Image</th>
+                <th>Vehicle Client</th>
+                <th>Emp Token</th>
+                <th>Operator</th>
+                <th>Part Time</th>
+                <th>Image Path</th>
+                <th>VIN</th>
+                <th>Actual Text</th>
+                <th>OCR Text</th>
+                <th>Shift Name</th>
+            </tr>
+        </thead>
+        <tbody id="dataBody">
+            <!-- Data will be inserted here by JavaScript -->
+        </tbody>
+    </table>
+
+    {% endblock %}
+    
+    {% block extra_js %}
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', function() {
+            fetch('/fetch_data/')
+                .then(response => response.json())
+                .then(data => {
+                    const dataTable = document.getElementById('dataTable');
+                    const dataBody = document.getElementById('dataBody');
+
+                    // Clear previous rows
+                    dataBody.innerHTML = '';
+
+                    // Show table
+                    dataTable.style.display = 'table';
+
+                    // Populate table with data
+                    data.data.forEach(answer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${answer.qr_code}</td>
+                            <td>${answer.model_code}</td>
+                            <td>${answer.qc_no}</td>
+                            <td>${answer.part_no}</td>
+                            <td>${answer.part_name}</td>
+                            <td>${answer.answer}</td>
+                            <td>${answer.checkpoint}</td>
+                            <td>${answer.severity}</td>
+                            <td>${answer.highlight}</td>
+                            <td>${answer.attribute}</td>
+                            <td>${answer.location}</td>
+                            <td>${answer.concern}</td>
+                            <td>${answer.ocr_operation}</td>
+                            <td>${answer.remark_image}</td>
+                            <td>${answer.vehicle_platform}</td>
+                            <td>${answer.emp_token}</td>
+                            <td>${answer.operator}</td>
+                            <td>${answer.part_time}</td>
+                            <td>${answer.image_path}</td>
+                            <td>${answer.vin}</td>
+                            <td>${answer.actual_text}</td>
+                            <td>${answer.ocr_text}</td>
+                            <td>${answer.shift_name}</td>
+                        `;
+                        dataBody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        });
+    </script>
+    {% endblock %}
+<!-- </body>
+</html> -->

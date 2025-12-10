@@ -1,0 +1,16 @@
+node_modules
+*.pyc
+__pycache__/
+.migrations/
+/__init__.py
+/media/Remark_Images/
+/media/image_path/image_path/part_images/
+/0001_initial.py
+# /0002_alter_part_tbl_attribute_alter_part_tbl_highlight_and_more.py
+# /0003_model_checkpoint_tbl_image_processing_type.py
+# /0004_alter_model_checkpoint_tbl_checkpoint.py
+# /0005_alter_checkpoint_tbl_image_path_and_more.py
+# /0006_remove_checkpoint_tbl_image_path_and_more.py
+# /0002_checkpoint_tbl_platform.py
+# /0003_alter_user_tbl_token_alter_user_tbl_user_name.py
+vms_web_server/settings.py

@@ -1,0 +1,956 @@
+
+        {% extends 'base.html' %}
+        <title>{% block title %} Admin Report {% endblock %}</title>
+        
+        {% load static %}
+        {% block extra_css %}
+        <style>
+            /* Styling for layout and form design */
+            
+
+.report-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px;
+    padding: 30px;
+    border: 1px solid #ccc;
+    background-color: #f5f5f5;
+    border-radius: 10px;
+}
+
+.form-group {
+    flex: 1; /* Make all form groups occupy equal space by default */
+    margin: 0 10px;
+    min-width: 150px;
+}
+
+/* Adjust specific fields */
+.form-group#status-group {
+    flex: 0.5; /* Smaller width for Status */
+    max-width: 100px; /* Limit maximum width */
+}
+
+.form-group#model-group {
+    flex: 2; /* Larger width for Model */
+    max-width: 400px; /* Limit maximum width */
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.form-group select,
+.form-group input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.report-button,
+.excel-button,
+.pdf-button {
+    background-color: #062A63;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin: 0 5px;
+    border-radius: 4px;
+}
+
+.report-button:hover,
+.excel-button:hover,
+.pdf-button:hover {
+    background-color: #045191;
+}
+
+/* Responsive layout for small screens */
+@media screen and (max-width: 768px) {
+    .form-group {
+        flex: 100%; /* Stack form groups on small screens */
+        margin: 10px 0;
+    }
+}
+
+/* Style the buttons inside the button group */
+.button-group .btn {
+    background-color: #01365a;   /* Dark blue color */
+    color: white;                 /* White text */
+    border: none;                 /* Remove default borders */
+    padding: 10px 20px;           /* Add padding to the buttons */
+    font-size: 16px;              /* Set a decent font size */
+    border-radius: 5px;           /* Rounded corners */
+    margin-right: 10px;           /* Space between buttons */
+    transition: background-color 0.3s ease; /* Smooth transition effect */
+}
+
+/* Change the color of the button on hover */
+.button-group .btn:hover {
+    background-color: #005b99;   /* Lighter shade of blue for hover */
+}
+
+/* Optionally, you can customize the button colors for success and danger too */
+.button-group .btn-success {
+    background-color: #01365a; /* Green color for success */
+}
+
+.button-group .btn-danger {
+    background-color: #01365a; /* Red color for danger */
+}
+
+
+/* pie chart css */
+
+.report-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.left-section {
+    text-align: center;
+    max-width: 300px; /* Accommodates larger pie chart and legend */
+}
+
+.large-pie-chart {
+    width: 250px; /* Size of the pie chart */
+    height: auto; /* Maintain aspect ratio */
+    margin-bottom: 15px; /* Space between chart and text */
+}
+
+.totals-info {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* Legend Styles */
+.legend {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.legend-color {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.ok-color {
+    background-color: #88EA16; /* Green for OK */
+}
+
+.nok-color {
+    background-color: #FF0000; /* Red for NOK */
+}
+
+
+/* differen css */
+.button-group {
+    display: flex;
+    justify-content: flex-start; /* Align buttons to the left */
+    gap: 10px; /* Add some space between buttons */
+    margin-top: 20px;
+    width: 100%; /* Ensure it spans the full width */
+    color: #02366e;
+}
+
+.report-button, .excel-button, .pdf-button {
+    background-color: #062A63;
+    color: #fff;
+    border: none;
+    padding: 15px 25px; /* Increase button size */
+    font-size: 16px; /* Make text larger */
+    cursor: pointer;
+    border-radius: 4px; /* Optional: Add rounded corners */
+    transition: background-color 0.3s ease; /* Optional: Add hover effect */
+}
+
+.report-button:hover, .excel-button:hover, .pdf-button:hover {
+    background-color: #044085; /* Optional: Change color on hover */
+}
+
+
+.report-button:hover,
+.excel-button:hover {
+    background-color: #045191;
+}
+            /* Responsive layout */
+            @media screen and (max-width: 768px) {
+                .form-group {
+                    flex-basis: 100%;
+                }
+            }
+    
+  /* Main container to position table and pie chart side by side */
+.report-container {
+    display: flex;
+    justify-content: center; /* Center the content */
+    gap: 20px; /* Space between table and pie chart */
+    padding: 20px;
+    margin: 0 auto; /* Center the container */
+    max-width: 1200px; /* Limit the width of the entire container */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for better visual */
+    background-color: #f9f9f9; /* Light background for contrast */
+    border-radius: 8px; /* Rounded corners */
+}
+
+/* General styling for the table */
+.data-table {
+    width: 90%; /* Adjust width as needed */
+    margin: 20px auto; /* Center the table */
+    border-collapse: collapse; /* Remove gaps between cells */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Add a shadow for depth */
+}
+
+/* Table header styles */
+.data-table thead th {
+    background-color: #02366e; /* Blue header */
+    color: white;
+    padding: 12px;
+    text-align: center;
+    position: sticky;
+    top: 0; /* Keeps the header fixed during scroll */
+    z-index: 2; /* Ensures header stays on top */
+}
+
+/* Table row styles */
+.data-table tbody td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center; /* Center-align text in cells */
+    font-size: 14px;
+    color: #333;
+}
+
+/* Alternate row coloring */
+.data-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.data-table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+/* Hover effect */
+.data-table tbody tr:hover {
+    background-color: #e0f7fa; /* Light blue on hover */
+}
+
+/* Empty message row styling */
+.data-table tbody tr td[colspan] {
+    text-align: center;
+    color: #555;
+    font-weight: bold;
+    padding: 20px;
+}
+
+/* Scrollable container */
+#resultsContainer {
+    max-height: 400px; /* Adjust height as needed */
+    overflow-y: auto; /* Vertical scrolling */
+    overflow-x: auto; /* Horizontal scrolling */
+    border: 1px solid #ccc; /* Border around the table */
+    background-color: #fff; /* White background for better visibility */
+    border-radius: 8px; /* Rounded corners */
+    padding: 10px; /* Padding around the content */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
+}
+
+/* Table responsiveness */
+@media (max-width: 768px) {
+    .data-table {
+        font-size: 12px; /* Smaller font for smaller screens */
+    }
+
+    .data-table tbody td {
+        padding: 8px;
+    }
+
+    .data-table thead th {
+        padding: 10px;
+    }
+}
+
+/* Right: Pie chart styling */
+.pie-chart {
+    flex: 1; /* Adjust the pie chart size relative to the table */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Right: Pie Chart container without visible border */
+.pie-chart-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 10px;
+}
+
+.pie-chart-container img {
+    width: 300px;
+    margin-bottom: 10px;
+}
+
+/* Totals info styling */
+.totals-info {
+    font-size: 14px;
+}
+
+.chart-and-totals {
+    display: flex;
+    align-items: center;
+}
+
+    /* QR CODE  */
+    /* Custom button styles for Scan QR Code */
+.scan-btn {
+    background-color: #003366;   /* Dark blue background */
+    color: white;                 /* White text */
+    border: none;                 /* Remove default borders */
+    padding: 10px 20px;           /* Add padding */
+    font-size: 16px;              /* Set font size */
+    border-radius: 5px;           /* Rounded corners */
+    transition: background-color 0.3s ease; /* Smooth transition effect */
+}
+
+/* Hover effect for the Scan QR Code button */
+.scan-btn:hover {
+    background-color: #005b99;   /* Lighter blue color when hovered */
+}
+
+/* Optionally, you can set focus styles */
+.scan-btn:focus {
+    outline: none;               /* Remove focus outline */
+    box-shadow: 0 0 0 3px rgba(0, 91, 153, 0.5); /* Focus border shadow */
+}
+.modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            max-width: 400px;
+        }
+
+        .modal-content img {
+            width: 350px;
+            height: 65px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+}
+    
+
+        </style>
+        {% endblock %}
+    <!-- </head>
+    
+    <body> -->
+        {% block content %}
+        <!-- {% include 'navbarAdmin.html' %} -->
+        
+        <!-- Modal for viewing images -->
+        <div id="imageModal" class="modal">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img class="modal-content" id="modalImage" alt="Image">
+            <div id="caption"></div>
+        </div>
+
+
+        <!-- Filter form for generating report -->
+        <!-- Date Range -->
+            
+        <!-- Filter form for generating report -->
+        <form class="report-form" id="filterForm" method="GET">
+
+            <!-- Date Range -->
+            <div class="form-group">
+                <label for="dateFrom">Date From</label>
+                <input type="date" id="dateFrom" name="dateFrom" value="{{ date_from|date:'Y-m-d' }}">
+            </div>
+        
+            <div class="form-group">
+                <label for="dateTo">Date To</label>
+                <input type="date" id="dateTo" name="dateTo" value="{{ date_to|date:'Y-m-d' }}">
+            </div>
+        
+            <!-- Platform Selection -->
+            <div class="form-group" id="platform-group">
+                <label for="platform_id">Client</label>
+                <select id="platform_id" name="platform_id">
+                    <option value="">Select Client</option> <!-- Default 'All' option -->
+                    {% for platform in platforms %}
+                        <option value="{{ platform.id }}" 
+                                {% if platform.id|stringformat:"s" == selected_platform_id %} selected {% endif %}>
+                            {{ platform.platform }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+            <!-- Model Selection -->
+            <div class="form-group" id="model-group">
+                <label for="model_id">Model</label>
+                <select id="model_id" name="model_id">
+                    <option value="">ALL</option> <!-- Default 'All' option -->
+                    {% for model in models %}
+                        <option value="{{ model.id }}" {% if model.id|stringformat:"s" == selected_model_id %} selected {% endif %}>
+                            {{ model.model_code }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+            <!-- Shift Selection -->
+            <div class="form-group" id="shift-group">
+                <label for="shift">Shift</label>
+                <select id="shift" name="shift">
+                    <option value="">All </option> <!-- Default 'All' option -->
+                    {% for shift in shifts %}
+                        <option value="{{ shift.Shift_name }}" {% if shift.Shift_name == selected_shift %} selected {% endif %}>
+                            {{ shift.Shift_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+             <!-- Status Selection -->
+             <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">ALL</option>
+                    <option value="OK" {% if request.GET.status == "OK" %}selected{% endif %}>OK </option>
+                    <option value="NOK" {% if request.GET.status == "NOK" %}selected{% endif %}>NOK</option>
+                </select>
+            </div>
+
+
+
+        
+            <!-- Location Selection -->
+            <div class="form-group" id="location-group">
+                <label for="location">Location</label>
+                <select id="location" name="location">
+                    <option value="">All </option> <!-- Default 'All' option -->
+                    {% for location in locations %}
+                        <option value="{{ location.location }}" {% if location.location == selected_location %} selected {% endif %}>
+                            {{ location.location }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+
+
+            <div class="button-group">
+                <button type="submit" id="generateReportButton" class="report-button"><i class="fas fa-file-alt"></i> Generate Report</button>
+                <button onclick="exportToExcel()" class="excel-button"><i class="fas fa-file-excel"></i> Download Excel</button>
+                <button onclick="exportToPDF()" class="pdf-button"><i class="fas fa-file-pdf"></i> Download PDF</button> <!-- New PDF button -->
+                <button style="background-color: #02366e; color: #ffffff; padding: 10px;width: 100px;" id="load-data-btn">Load</button>
+            </div>
+        </form>
+        
+        
+        
+        
+<div class="report-container">
+    <!-- Left-side Pie Chart with OK/NOK Counts -->
+    <div class="left-section">
+        {% if chart %}
+            <img src="data:image/png;base64,{{ chart }}" alt="Status Pie Chart" class="large-pie-chart" />
+        {% else %}
+            <p>No data to display in pie chart.</p>
+        {% endif %}
+
+        <!-- OK and NOK Totals Below Pie Chart -->
+        <div class="totals-info">
+            <p>Total OK: {{ ok_count }}</p>
+            <p>Total NOK: {{ nok_count }}</p>
+        </div>
+
+        <!-- Legend for OK and NOK -->
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-color ok-color"></span> OK
+            </div>
+            <div class="legend-item">
+                <span class="legend-color nok-color"></span> NOK
+            </div>
+        </div>
+    </div>
+</div>
+
+        
+</div>
+    <!-- Display area for results -->
+    <div class="data-table" id="resultsContainer">
+        <table>
+            <thead>
+                <tr>
+                    <th>VIN (Vehicle Identification Number)</th>
+                    <th>Part</th>
+                    <th>Answer Status</th>
+                    <th>Shift Name</th>
+                    <th>Vehicle Client</th>
+                    <th>Operator</th>
+                    <th>Location</th>
+                    <th>QC No</th>
+                    <th>Log Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in vin_reports %}
+                    <tr>
+                        <td><a href="{% url 'vin_detail' vin=report.qr_code %}">
+                            {{ report.qr_code|slice:":17" }}
+                        </td>
+                        <td>{{ report.model_code }}</td>
+                        <td>{{ report.answer_status }}</td>
+                        <td>{{ report.shift_name }}</td>
+                        <td>{{ report.vehicle_platform }}</td>
+                        <td>{{ report.operator }}</td>
+                        <td>{{ report.location }}</td>
+                        <td>{{ report.qc_no }}</td>
+                        <td>{{ report.log_date|date:"d/m/y" }}</td>
+                        
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9">No data found for the selected status.</td>
+                        <td colspan="9">No data found for the selected date range.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+    <!-- jQuery script -->
+    
+<!-- jQuery -->
+<script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
+
+<!-- jsPDF -->
+<script src="{% static 'node_modules/jspdf/dist/jspdf.umd.min.js' %}"></script>
+
+<!-- jsPDF-AutoTable -->
+<script src="{% static 'node_modules/jspdf-autotable/dist/jspdf.plugin.autotable.min.js' %}"></script>
+
+<!-- XLSX -->
+<script src="{% static 'node_modules/xlsx/dist/xlsx.full.min.js' %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#filterButton').on('click', function () {
+                var formData = $('#filterForm').serialize();
+                $.ajax({
+                    type: 'GET',
+                    url: '/Report_screen/',
+                    data: formData,
+                    success: function (data) {
+                        $('#resultsTableBody').empty(); // Clear previous results
+                        if (data.length > 0) {
+                            data.forEach(function (result) {
+                                var newRow = "<tr>" +
+                                    "<td>" + result.model_name + "</td>" +
+                                    "<td>" + result.result + "</td>" +
+                                    "<td>" + result.Shift + "</td>" 
+                                    "<td>" + result.Date_Field + "</td>" +
+                                    "</tr>";
+
+                                    var newRow = "<tr>" +
+                                        "<td>" + result.model_name + "</td>" +
+                                        "<td>" + result.result + "</td>" +
+                                        "<td>" + result.Shift + "</td>" +
+                                        "<td>" + result.Date_Field + "</td>" +
+                                        "</tr>";
+
+                                $('#resultsTableBody').append(newRow);
+                            });
+                        } else {
+                            $('#resultsTableBody').html('<tr><td colspan="5" class="no-results">No results found</td></tr>');
+                        }
+                        $('#resultsContainer').show(); // Show results container
+                    },
+                    error: function (error) {
+                        console.log('Error fetching data:', error);
+                    }
+                });
+            });
+        });
+
+        function openContactModal() {
+        document.getElementById('contactModal').style.display = 'block';
+    }
+
+    function closeContactModal() {
+        document.getElementById('contactModal').style.display = 'none';
+    }
+
+    // Close modal if clicked outside of it
+    window.onclick = function(event) {
+        var modal = document.getElementById('contactModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+    //     function exportToExcel() {
+    //     const reportTable = document.querySelector("table");
+    //     const excelData = [];
+    //     const rows = reportTable.querySelectorAll("tbody tr");
+
+    //     rows.forEach(row => {
+    //         const rowData = [];
+    //         const cells = row.querySelectorAll("td");
+    //         cells.forEach(cell => {
+    //             rowData.push(cell.textContent);
+    //         });
+    //         excelData.push(rowData);
+    //     });
+
+    //     const worksheet = XLSX.utils.aoa_to_sheet([["model_name", "Result", "Shift"], ...excelData]);
+    //     const workbook = XLSX.utils.book_new();
+    //     XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
+    //     XLSX.writeFile(workbook, 'report.xlsx');
+    // }
+
+    function showImage(url) {
+        // Get the modal element and image element
+        var modal = document.getElementById("imageModal");
+        var modalImage = document.getElementById("modalImage");
+
+        // Set the image URL and display the modal
+        modalImage.src = url;
+        modal.style.display = "block";
+    }
+
+    function closeModal() {
+        // Hide the modal
+        var modal = document.getElementById("imageModal");
+        modal.style.display = "none";
+    }
+
+    // Close modal when clicking outside the image
+    window.onclick = function(event) {
+        var modal = document.getElementById("imageModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    function formatDate(input) {
+    if (input.type === 'date') {
+        const [year, month, day] = input.value.split("-");
+        if (year && month && day) {
+            input.type = 'text'; // Change type back to text for display
+            input.value = ${day}/${month}/${year};
+        }
+    }
+}
+
+
+    
+     
+    // Export to Excel functionality
+    // Using xlsx-style library to ensure proper styling
+function exportToExcel() {
+    const reportTable = document.querySelector(".data-table");
+    if (!reportTable) {
+        alert("Table not found!");
+        return;
+    }
+
+    const excelData = [];
+    const rows = reportTable.querySelectorAll("tbody tr");
+
+    // Define headers (A1 row)
+    const headers = [
+        "Vehicle Identification Number",
+        "Part",
+        "Answer Status",
+        "Shift Name",
+        "Vehicle Client",
+        "Operator",
+        "Location",
+        "QC No",
+        "Log Date"
+    ];
+    excelData.push(headers); // Add headers as the first row in Excel
+
+    // Extract table body rows
+    rows.forEach(row => {
+        const rowData = [];
+        const cells = row.querySelectorAll("td");
+        cells.forEach(cell => {
+            rowData.push(cell.textContent.trim()); // Remove unnecessary spaces
+        });
+        excelData.push(rowData);
+    });
+
+    // Create a worksheet and add data
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+
+    // Adjust column widths for better visibility
+    const columnWidths = [
+        { wch: 30 }, // VIN - Wider for Vehicle Identification Number
+        { wch: 25 }, // Part
+        { wch: 15 }, // Answer Status
+        { wch: 15 }, // Shift Name
+        { wch: 20 }, // Vehicle Platform
+        { wch: 15 }, // Operator
+        { wch: 20 }, // Location
+        { wch: 10 }, // QC No
+        { wch: 15 }  // Log Date
+    ];
+    worksheet["!cols"] = columnWidths;
+
+    // Define bold header style using xlsx-style
+    const headerStyle = {
+        font: { bold: true, sz: 12 }, // Bold font and size
+        alignment: { horizontal: "center", vertical: "center" } // Center alignment
+    };
+
+    // Apply bold styling to header cells (A1, B1, ..., I1)
+    for (let colIndex = 0; colIndex < headers.length; colIndex++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex }); // Address for header cells
+        if (!worksheet[cellAddress]) {
+            worksheet[cellAddress] = { v: headers[colIndex], s: headerStyle }; // Add style and value
+        } else {
+            worksheet[cellAddress].s = headerStyle; // Apply style only if cell already exists
+        }
+    }
+
+    // Create a workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
+
+    // Save the workbook as an Excel file
+    XLSX.writeFile(workbook, 'Generated_Report.xlsx');
+}
+
+function exportToPDF() {
+    // Load jsPDF
+    const { jsPDF } = window.jspdf;
+
+    // Initialize a new PDF document
+    const doc = new jsPDF('p', 'mm', 'a4'); // Portrait mode, millimeters, A4 size
+
+    // Set the title for the PDF
+    doc.setFontSize(14);
+    doc.setTextColor(0, 51, 102); // Dark blue color
+    doc.text("Generated Report", 14, 15);
+
+    // Extract data from the table
+    const reportTable = document.querySelector(".data-table");
+    if (!reportTable) {
+        alert("Table not found!");
+        return;
+    }
+
+    const rows = Array.from(reportTable.querySelectorAll("tbody tr"));
+    const pdfData = rows.map(row => {
+        return Array.from(row.querySelectorAll("td")).map(cell => cell.textContent.trim());
+    });
+
+    // Define the headers for the PDF table
+    const headers = [
+        ["VIN (Vehicle Identification Number)", "Part", "Answer Status", "Shift Name", "Vehicle Client", "Operator", "Location", "QC No", "Log Date"]
+    ];
+
+    // Use autoTable to create the table in PDF
+    doc.autoTable({
+        head: headers,
+        body: pdfData,
+        startY: 25, // Start table below the title
+        theme: 'striped', // Use striped theme for better readability
+        styles: {
+            fontSize: 7, // Smaller font size to fit more data
+            cellPadding: 2, // Reduce padding for a tighter layout
+            halign: 'center', // Center-align text
+            overflow: 'linebreak', // Wrap text within the cell
+        },
+        headStyles: {
+            fillColor: [0, 51, 102], // Dark blue header background
+            textColor: [255, 255, 255], // White text in headers
+            fontSize: 8, // Slightly larger font for headers
+            fontStyle: 'bold', // Bold header text
+            halign: 'center', // Center-align header text
+        },
+        alternateRowStyles: {
+            fillColor: [240, 240, 240] // Light gray alternating rows
+        },
+        columnStyles: {
+            // Let autoTable decide column widths automatically, instead of hardcoding
+            0: { cellWidth: 'auto' }, // VIN
+            1: { cellWidth: 'auto' }, // Part
+            2: { cellWidth: 'auto' }, // Answer Status
+            3: { cellWidth: 'auto' }, // Shift Name
+            4: { cellWidth: 'auto' }, // Vehicle Platform
+            5: { cellWidth: 'auto' }, // Operator
+            6: { cellWidth: 'auto' }, // Location
+            7: { cellWidth: 'auto' }, // QC No
+            8: { cellWidth: 'auto' }, // Log Date
+        },
+        margin: { top: 25, left: 10, right: 10 }, // Proper margins to fit the table
+        pageBreak: 'auto', // Automatically add page breaks when needed
+        didDrawPage: function (data) {
+            // Add a footer with the page number
+            const pageCount = doc.internal.getNumberOfPages();
+            doc.setFontSize(8);
+            doc.setTextColor(100);
+            doc.text(Page ${pageCount}, data.settings.margin.left, doc.internal.pageSize.height - 10);
+        }
+    });
+
+    // Save the PDF file
+    doc.save('Generated_Report.pdf');
+}
+
+
+
+
+
+
+
+function renderPieChart(okCount, notOkCount) {
+    const ctx = document.getElementById('jobStatusChart').getContext('2d');
+    
+    // Destroy any existing chart instance
+    if (window.jobStatusChart) {
+        window.jobStatusChart.destroy();
+    }
+
+    window.jobStatusChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['OK', 'Not OK'],
+            datasets: [{
+                label: 'Job Status',
+                data: [okCount, notOkCount],
+                backgroundColor: ['#4CAF50', '#FF5722'],
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Job Status Summary'
+                }
+            }
+        }
+    });
+}
+
+// Example data processing after AJAX fetch success
+$('#filterButton').on('click', function () {
+    // Your existing AJAX code here
+    
+    // After you process results, count "ok" and "not ok"
+    let okCount = 0;
+    let notOkCount = 0;
+
+    data.forEach(result => {
+        if (result.result === 'ok') {
+            okCount++;
+        } else if (result.result === 'not ok') {
+            notOkCount++;
+        }
+    });
+
+    // Call the function to render the pie chart
+    renderPieChart(okCount, notOkCount);
+});
+
+document.getElementById('platform_id').addEventListener('change', function() {
+    document.getElementById('filterForm').submit();
+});
+
+
+    </script>
+
+<script>
+   document.getElementById('load-data-btn').addEventListener('click', function () {
+        // Fetch data from the backend
+        fetch('/load-data-url/')  // Ensure this URL matches the one defined in urls.py
+            .then(response => response.json())
+            .then(data => {
+                console.log('Data loaded:', data);  // Debug: Check if data is received correctly
+
+                // Redirect to the data page after loading the data
+                window.location.href = '/data/';  // This will redirect to the data.html page
+            })
+            .catch(error => console.error('Error loading data:', error));
+    });
+</script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+ <script src="{% static 'node_modules/chart.js/dist/chart.umd.js' %}"></script>
+{% endblock %}

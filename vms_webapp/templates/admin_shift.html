@@ -1,0 +1,194 @@
+{% extends "base.html" %} {% load static %}
+<title>{% block title %} Admin Shift Management {% endblock %}</title>
+
+{% block extra_css %}
+<style>
+  /* your styles as-is from above, copy them over */
+  body,
+  h1,
+  p,
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+  }
+
+  .form-group {
+    margin: 10px 0;
+  }
+
+  .form-group label {
+    font-weight: bold;
+  }
+
+  .form-group input[type="time"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 10;
+  }
+
+  .modal-content {
+    background: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    max-width: 400px;
+  }
+
+  .delete,
+  form button[type="submit"],
+  form button[type="reset"] {
+    background: #062a63;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+  }
+
+  .delete:hover,
+  form button[type="submit"]:hover,
+  form button[type="reset"]:hover {
+    background: #2980b9;
+  }
+</style>
+{% endblock %}
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" /> -->
+<link rel="stylesheet" href="{% static 'css/toastr.min.css' %}" />
+
+{% block content %}
+
+<div class="content">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="{{ form.Shift_name.id_for_label }}">Shift Name:</label>
+      {{ form.Shift_name }}
+    </div>
+    <div class="form-group">
+      <label for="{{ form.Shift_From.id_for_label }}">Shift From:</label>
+      {{ form.Shift_From }}
+    </div>
+    <div class="form-group">
+      <label for="{{ form.Shift_To.id_for_label }}">Shift To:</label>
+      {{ form.Shift_To }}
+    </div>
+    <button type="submit">Save</button>
+    {% if form.errors %}
+    <div class="error">{{ form.errors }}</div>
+    {% endif %}
+    <a href="{% url 'admin_shift' %}">
+      <button type="button" class="delete">Cancel</button>
+    </a>
+  </form>
+
+  <div style="overflow-x: auto; overflow-y: auto; max-height: 400px">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Shift Name</th>
+          <th>Shift From</th>
+          <th>Shift To</th>
+          <th>Edit</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for shift in shifts %}
+        <tr>
+          <td>{{ shift.Shift_name }}</td>
+          <td>{{ shift.Shift_From }}</td>
+          <td>{{ shift.Shift_To }}</td>
+          <td>
+            <a
+              href="{% url 'admin_edit_shift' shift.id %}"
+              style="color: #062a63; font-size: 18px"
+              >Edit</a
+            >
+          </td>
+          <td>
+            <a
+              href="{% url 'admin_delete_shift' shift.id %}"
+              class="delete-link"
+              data-name="{{ shift.Shift_name }}"
+              data-url="{% url 'admin_delete_shift' shift.id %}"
+              style="color: red; font-size: 18px"
+            >
+              Delete
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="no-results">No shifts found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+{% if messages %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    {% for message in messages %}
+    Swal.fire({
+      icon: "{{ message.tags }}",
+      title: "{{ message.tags|capfirst }}",
+      text: "{{ message|escapejs }}",
+      confirmButtonColor: "#062A63"
+    });
+    {% endfor %}
+  });
+</script>
+{% endif %}
+
+<script>
+  document.querySelectorAll(".delete-link").forEach((link) => {
+    link.onclick = function (e) {
+      e.preventDefault();
+      const url = this.getAttribute("data-url");
+      const name = this.getAttribute("data-name") || "this shift";
+
+      Swal.fire({
+        title: `Delete "${name}"?`,
+        text: "This action cannot be undone!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = url;
+        }
+      });
+    };
+  });
+</script>
+
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script src="{% static 'js/toastr.min.js' %}"></script>
+
+{% endblock %}

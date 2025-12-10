@@ -1,0 +1,497 @@
+{% extends 'base.html' %}
+{% load static %}
+
+    <title>{% block title %} VIN Report - {{ vin|slice:":17" }} {% endblock %}</title>
+    
+    {% block extra_css %}
+    <style>
+        /* Header Styles */
+        .heads h2, .heads h3 {
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            margin: 10px 15px;
+            padding: 8px 15px;
+            display: inline-block;
+            border-radius: 5px;
+            font-size: 1.3rem;
+            color: white;
+            background-color: #002e5c;
+        }
+
+        /* Table Styles */
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background-color: #003366;
+            color: white;
+            padding: 12px 10px;
+        }
+
+        tbody td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tbody tr:hover {
+            background-color: #e9f7fe;
+        }
+
+        /* Pie Chart Styles */
+        .pie-chart-container {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 30px auto;
+        }
+
+        .chart-counts p {
+            margin: 8px 0;
+            font-weight: bold;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .ok-color { background-color: #88EA16; }
+        .nok-color { background-color: #FF0000; }
+
+        /* Button Styles */
+        .export-buttons {
+            margin: 15px 0;
+            text-align: right;
+        }
+
+        .btn-export {
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-pdf {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-excel {
+            background-color: #198754;
+            color: white;
+        }
+
+        /* Image Link */
+        .image-link {
+            font-size: 1.5rem;
+            color: #002e5c;
+            transition: transform 0.2s;
+        }
+
+        .image-link:hover {
+            transform: scale(1.2);
+            color: #0056b3;
+        }
+        .modal-backdrop.show {
+            opacity: 0;
+        }
+    </style>
+    {% endblock %}
+
+    {% block content %}
+    <div class="container-fluid reportContainer"id="reportContainer">
+        <!-- Report Header -->
+        <div class="heads d-flex justify-content-center flex-wrap py-3">
+            <h2>VIN: {{ vin|slice:":17" }}</h2>
+            <h3>Status: {{ answer }}</h3>
+            <h3>Shift: {{ shift_name_detail|default:"ALL" }}</h3>
+            <h3>Client: {{ vehicle_platform_detail }}</h3>
+            <h3>Location: {{ location_detail|default_if_none:"All" }}</h3>
+            <h3>QC Number: {{ qc_no_detail }}</h3>
+            <h3>Date: {{ log_date }}</h3>
+            <h3>Time for QC: {{ part_time }}</h3>
+
+        </div>
+<div class="container">
+    <form class="report-form row g-3 align-items-end" method="get" id="filterForm">
+
+        <!-- Location Filter -->
+        <div class="form-group col-md-2" id="location-group">
+            <label for="location" class="form-label fw-bold text-primary">Location</label>
+            <select name="location" id="location" class="form-control">
+                <option value="">All Locations</option>
+                {% for loc in all_locations %}
+                    <option value="{{ loc }}" {% if location == loc or request.GET.location == loc %}selected{% endif %}>
+                        {{ loc }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="form-group col-md-2" id="status-group">
+            <label for="status" class="form-label fw-bold text-primary">Status</label>
+            <select name="status" id="status" class="form-control">
+                <option value="">All</option>
+                <option value="OK" {% if status == "OK" or request.GET.status == "OK" %}selected{% endif %}>OK</option>
+                <option value="NOK" {% if status == "NOK" or request.GET.status == "NOK" %}selected{% endif %}>NOK</option>
+            </select>
+        </div>
+<!-- QC Number Filter -->
+<div class="form-group col-md-2" id="qc-no-group">
+    <label for="qc_no" class="form-label fw-bold text-primary">QC Number</label>
+    <select name="qc_no" id="qc_no" class="form-control">
+        <option value="1" {% if qc_no == "1" %}selected{% endif %}>1</option>
+        <option value="2" {% if qc_no == "2" %}selected{% endif %}>2</option>
+        <option value="3" {% if qc_no == "3" %}selected{% endif %}>3</option>
+    </select>
+</div>
+
+
+
+        <!-- Apply Filters -->
+        <div class="form-group col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn bg-primary-subtle w-20" style="background-color: #7ccddd;">
+                 Apply Filters
+            </button>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="button-group col-12 mt-3">
+            <button type="button" class="btn btn-danger" onclick="exportToPDF()">
+                 Export PDF
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="exportToExcel()">
+                 Export Excel
+            </button>
+        </div>
+
+    </form>
+</div>
+
+
+       
+
+        <!-- Pie Chart -->
+        <div class="pie-chart-container">
+            <canvas id="pieChart" width="300" height="300"></canvas>
+            
+            <div class="chart-counts text-center mt-3">
+                <p>OK Count: {{ ok_count }}</p>
+                <p>NOK Count: {{ nok_count }}</p>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-color ok-color"></span>
+                    <span>OK</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color nok-color"></span>
+                    <span>NOK</span>
+                </div>
+            </div>
+        </div>
+
+    
+
+        <!-- Data Table -->
+        <div class="table-container">
+            <table id="vinTable">
+                <thead>
+                    <tr>
+                        <th>Ferrules Name</th>
+                        <th>Checkpoint</th>
+                        <th>Status</th>
+                        <th>Severity</th>
+                        <th>Attribute</th>
+                        <th>Highlight</th>
+                        <th>Location</th>
+                        <th>Concern</th>
+                        
+                        <th>Image</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if answer_details %}
+                        {% for detail in answer_details %}
+                        <tr>
+                            <td>{{ detail.part_name }}</td>
+                            <td>{{ detail.checkpoint }}</td>
+                            <td>{{ detail.answer }}</td>
+                            <td>{{ detail.severity }}</td>
+                            <td>{{ detail.attribute }}</td>
+                            <td>{{ detail.highlight }}</td>
+                            <td>{{ detail.location }}</td>
+                            <td>{{ detail.concern }}</td>
+                            
+                            <td>
+                                {% if detail.remark_image %}
+                                <a href="#" class="image-link-preview" 
+                                   data-image="{% get_media_prefix %}{{ detail.remark_image }}">
+                                    <b>View</b>
+                                </a>
+                                {% else %}
+                                <span class="text-muted">No Image</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4">No details found for this VIN</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="imgPreviewModal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);justify-content:center;align-items:center;">
+        <div id="imgPreviewBox" style="background:#fff;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,0.18);padding:24px 18px 18px 18px;position:relative;min-width:220px;max-width:96vw;width:40%;display:flex;flex-direction:column;align-items:center;">
+            <span style="font-size:1.2rem;color:#222;font-weight:500;margin-bottom:16px;">Ferrules Image</span>
+            <img id="imgPreview" src="" alt="Ferrules Image" style="width:100%;max-width:520px;max-height:60vh;border-radius:8px;border:1px solid #eee;object-fit:contain;">
+            <!-- box-shadow:0 2px 8px #bbb; -->
+            <span id="closeImgPreview" style="position:absolute;top:18px;right:18px;font-size:2rem;color:#444;cursor:pointer;line-height:1;">&times;</span>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block extra_js %}
+
+    <!-- Script Imports (Offline, correct paths) -->
+    <script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
+    <script src="{% static 'node_modules/chart.js/dist/chart.umd.js' %}"></script>
+    <script src="{% static 'node_modules/xlsx-js-style/dist/xlsx.min.js' %}"></script>
+    <!-- <script src="{% static 'node_modules/xlsx/dist/xlsx.full.min.js' %}"></script> -->
+    <script src="{% static 'node_modules/jspdf/dist/jspdf.umd.min.js' %}"></script>
+    <script src="{% static 'node_modules/jspdf-autotable/dist/jspdf.plugin.autotable.min.js' %}"></script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.image-link-preview').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var imgUrl = this.getAttribute('data-image');
+                    var modal = document.getElementById('imgPreviewModal');
+                    var img = document.getElementById('imgPreview');
+                    img.src = imgUrl;
+                    modal.style.display = 'flex';
+                });
+            });
+            document.getElementById('closeImgPreview').onclick = function() {
+                document.getElementById('imgPreviewModal').style.display = 'none';
+                document.getElementById('imgPreview').src = '';
+            };
+            document.getElementById('imgPreviewModal').onclick = function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                    document.getElementById('imgPreview').src = '';
+                }
+            };
+        });
+    </script>
+    <script>
+        // Initialize Pie Chart
+        document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('pieChart').getContext('2d');
+    const okCount = Number("{{ ok_count|default:'0' }}");
+    const nokCount = Number("{{ nok_count|default:'0' }}");
+    // Always show chart, even if both counts are 0
+    const data = (okCount === 0 && nokCount === 0) ? [0, 0] : [okCount, nokCount];
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['OK', 'NOK'],
+            datasets: [{
+                data: data,
+                backgroundColor: ['#88EA16', '#FF0000'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } }
+        }
+    });
+});
+
+        // Image Modal Handler
+        // const imageModal = document.getElementById('imageModal');
+        // imageModal.addEventListener('show.bs.modal', function(event) {
+        //     const trigger = event.relatedTarget;
+        //     document.getElementById('modalImage').src = trigger.dataset.image;
+        // });
+
+        // Export Functions
+      
+    function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l', 'pt', 'a4');
+    const marginLeft = 40;
+    let cursorY = 40;
+
+    doc.setFontSize(16);
+    doc.text('VIN Report', marginLeft, cursorY);
+    cursorY += 30;
+
+    // Header data similar to your Excel header
+    const headerData = [
+        ['VIN', '{{ vin|cut:"<"|cut:">" }}'],
+        ['Answer', '{{ answer }}'],
+        ['Shift', '{{ shift_name_detail| default:"ALL" }}'],
+        ['Client', '{{ vehicle_platform_detail }}'],
+        ['Location', '{{ location_detail|default_if_none:"All" }}'],
+        ['Chassis No', ''],
+        ['Engine No', ''],
+        ['YOM', ''],
+        ['QC No', '{{ qc_no_detail }}'],
+        ['Date', '{{ log_date }}'],
+        ['Time for QC', '{{ part_time }}']
+    ];
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    headerData.forEach(([label, value]) => {
+        doc.text(label + ':', marginLeft, cursorY);
+        doc.setFont('helvetica', 'normal');
+        doc.text(value ? String(value) : '', marginLeft + 100, cursorY);
+        cursorY += 18;
+        doc.setFont('helvetica', 'bold');
+    });
+
+    cursorY += 10; // Add some space after header
+
+    // Generate autoTable from your HTML table, start below header
+    doc.autoTable({
+        html: '#vinTable',
+        startY: cursorY,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [100, 100, 100], fontStyle: 'bold' },
+        margin: { left: marginLeft, right: marginLeft },
+        pageBreak: 'auto'
+    });
+
+    doc.save('VIN_Report.pdf');
+}
+
+
+
+
+
+
+       function exportToExcel() {
+    const headerData = [
+        ['VIN', '{{ vin|cut:"<"|cut:">" }}'],
+        ['Answer', '{{ answer }}'],
+        ['Shift', '{{ shift_name_detail| default:"ALL" }}'],
+        ['Client', '{{ vehicle_platform_detail }}'],
+        ['Location', '{{ location_detail|default_if_none:"All" }}'],
+        ['Chassis No'],
+        ['Engine No'],
+        ['YOM'],
+        ['QC No', '{{ qc_no_detail }}'],
+        ['Date', '{{ log_date }}'],
+        ['Time for QC', '{{ part_time }}']
+    ];
+
+    // Create worksheet
+    const ws = XLSX.utils.aoa_to_sheet(headerData);
+
+    // 🔥 Apply bold only to first column (labels) in headerData
+    headerData.forEach((row, r) => {
+        if (row.length > 0) {
+            const cell = ws[XLSX.utils.encode_cell({ r, c: 0 })]; // column 0 only
+            if (cell) {
+                cell.s = { font: { bold: true, name: "Arial", sz: 12 } };
+            }
+        }
+    });
+
+    // Add empty row for spacing
+    XLSX.utils.sheet_add_aoa(ws, [[]], { origin: -1 });
+
+    // Get full table data
+    const table = document.getElementById('vinTable');
+    const tableData = XLSX.utils.sheet_to_json(XLSX.utils.table_to_sheet(table), { header: 1 });
+
+    // Add table data
+    XLSX.utils.sheet_add_aoa(ws, tableData, { origin: -1 });
+
+    // Bold style for table header row (after headerData and empty row)
+    const startRow = headerData.length + 1;
+    tableData[0].forEach((_, c) => {
+        const cell = ws[XLSX.utils.encode_cell({ r: startRow, c })];
+        if (cell) {
+            cell.s = { font: { bold: true, name: "Arial", sz: 12 } };
+        }
+    });
+
+    // Create workbook and save
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "VIN Report");
+    XLSX.writeFile(wb, `VIN_Report_{{ vin|cut:"<"|cut:">" }}.xlsx`);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const imageModal = document.getElementById('imageModal');
+    if (imageModal) { // Ensure imageModal exists
+        imageModal.addEventListener('show.bs.modal', function(event) {
+            const trigger = event.relatedTarget;
+            const imageUrl = trigger.getAttribute('data-image');
+            const modalImage = imageModal.querySelector('#modalImage');
+            modalImage.src = imageUrl;
+        });
+    }
+});
+
+$('#myModal').on('hidden.bs.modal', function () {
+  location.reload(); // Remove this line
+});
+
+    </script>
+    
+
+    {% endblock %}

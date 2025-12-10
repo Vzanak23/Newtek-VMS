@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality Control System - User Manual</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        
+        .cover-page {
+            page-break-after: always;
+            text-align: center;
+            padding-top: 100px;
+        }
+        
+        .cover-page h1 {
+            font-size: 42px;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .cover-page h2 {
+            font-size: 24px;
+            color: #475569;
+            margin-bottom: 40px;
+        }
+        
+        .cover-page .info {
+            font-size: 18px;
+            color: #64748b;
+            margin: 20px 0;
+        }
+        
+        .toc {
+            page-break-after: always;
+            padding: 20px 0;
+        }
+        
+        .toc h2 {
+            color: #1e3a8a;
+            border-bottom: 3px solid #1e3a8a;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .toc-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .toc-item:hover {
+            background: #f1f5f9;
+        }
+        
+        .section {
+            page-break-before: always;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            color: #1e3a8a;
+            font-size: 32px;
+            border-bottom: 4px solid #1e3a8a;
+            padding-bottom: 15px;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #1e40af;
+            font-size: 24px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 5px solid #3b82f6;
+            padding-left: 15px;
+        }
+        
+        h3 {
+            color: #1e40af;
+            font-size: 20px;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        h4 {
+            color: #475569;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin-bottom: 15px;
+            padding-left: 30px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border-left: 5px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        .warning-box h3 {
+            color: #d97706;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .warning-box h3:before {
+            content: "⚠️";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .info-box {
+            background: #dbeafe;
+            border-left: 5px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        .info-box h3 {
+            color: #1e40af;
+            margin-top: 0;
+        }
+        
+        .example-box {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            page-break-inside: avoid;
+        }
+        
+        .step-box {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        th {
+            background: #1e3a8a;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .credential-box {
+            background: #1e3a8a;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        .credential-box strong {
+            color: #fbbf24;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #dc2626;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 14px;
+            border-top: 2px solid #e5e7eb;
+            margin-top: 40px;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .section {
+                page-break-before: always;
+            }
+            
+            .warning-box, .info-box, .example-box, .step-box, table {
+                page-break-inside: avoid;
+            }
+            
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
+        }
+    </style>
+<style>
+    .download-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        font-weight: 700 !important; /* Makes text bold */
+        padding: 10px 20px;
+    }
+</style>
+
+<div id="downloadButtonArea">
+    <a href="{% url 'download_pdf' %}" class="btn btn-danger download-btn">
+        <strong>Download PDF</strong>
+    </a>
+</div>
+
+
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover-page">
+        <h1>Quality Control System</h1>
+        <h2>User Manual</h2>
+        <div class="info">
+            <p><strong>Newtek Quality Check Application </strong></p>
+            <p style="margin-top: 60px; font-size: 16px;">Version 1.0</p>
+          
+        </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <div class="toc-item"><span>1. System Login</span><span>3</span></div>
+        <div class="toc-item"><span>2. Dashboard Overview</span><span>4</span></div>
+        <div class="toc-item"><span>3. Client Management</span><span>5</span></div>
+        <div class="toc-item"><span>4. Parts Management</span><span>7</span></div>
+        <div class="toc-item"><span>5. Ferrules Management</span><span>10</span></div>
+        <div class="toc-item"><span>6. Checkpoints Management</span><span>12</span></div>
+        <div class="toc-item"><span>7. Ferrules Connection</span><span>16</span></div>
+        <div class="toc-item"><span>8. Employees Management</span><span>19</span></div>
+        <div class="toc-item"><span>9. Reports</span><span>21</span></div>
+        <div class="toc-item"><span>10. Important Cautions</span><span>25</span></div>
+      
+    </div>
+
+    <!-- Section 1: System Login -->
+    <div class="section">
+        <h1>1. System Login</h1>
+        
+        <h2>1.1 Login Credentials</h2>
+        <div class="credential-box">
+            <p><strong>Username:</strong> admin</p>
+            <p><strong>Password:</strong> pass@123</p>
+            <p><strong>Access URL:</strong> http://localhost:8000/</p>
+            
+        </div>
+        
+        <h2>1.2 Server Application Access</h2>
+        <table>
+            <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td><strong>Variant Server App Username</strong></td>
+                <td>admin</td>
+            </tr>
+            <tr>
+                <td><strong>Variant Server App Password</strong></td>
+                <td>pass@123</td>
+            </tr>
+            <tr>
+                <td><strong>Access Method</strong></td>
+                <td>Search in Chrome's address bar</td>
+            </tr>
+        </table>
+        
+        <h2>1.3 First-Time Login</h2>
+        <ol>
+            <li>Open your web browser (Chrome recommended)</li>
+            <li>Navigate to <code>http://localhost:8000/</code></li>
+            <li>Enter the username and password provided above</li>
+            <li>Click the Login button</li>
+            <li>You will be directed to the main dashboard</li>
+        </ol>
+        
+        <div class="info-box">
+            <h3>Security Note</h3>
+            <p>For security purposes, always log out properly when you finish your session. The Logout button is located in the top-right corner of every page.</p>
+        </div>
+    </div>
+
+    <!-- Section 2: Dashboard Overview -->
+    <div class="section">
+        <h1>2. Dashboard Overview</h1>
+        
+        <h2>2.1 Navigation Menu</h2>
+        <p>The system provides a comprehensive navigation menu at the top of the screen with the following modules:</p>
+        
+        <table>
+            <tr>
+                <th>Module</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td><strong>Client</strong></td>
+                <td>Manage client/platform information (e.g., Cummins)</td>
+            </tr>
+            <tr>
+                <td><strong>Parts</strong></td>
+                <td>Manage part numbers, specifications, and details</td>
+            </tr>
+            <tr>
+                <td><strong>Ferrules</strong></td>
+                <td>Manage ferrule types and configurations</td>
+            </tr>
+            <tr>
+                <td><strong>Checkpoints</strong></td>
+                <td>Manage quality control checkpoints</td>
+            </tr>
+            <tr>
+                <td><strong>Ferrules Connection</strong></td>
+                <td>Link ferrules to models and parts</td>
+            </tr>
+            <tr>
+                <td><strong>Employees</strong></td>
+                <td>Manage employee information and access levels</td>
+            </tr>
+            <tr>
+                <td><strong>Shifts</strong></td>
+                <td>Manage work shift schedules</td>
+            </tr>
+            <tr>
+                <td><strong>Actions</strong></td>
+                <td>Perform various system actions</td>
+            </tr>
+            <tr>
+                <td><strong>Admin</strong></td>
+                <td>Administrative functions and settings</td>
+            </tr>
+        </table>
+        
+        <h2>2.2 Screen Elements</h2>
+        
+        <h3>Top Bar</h3>
+        <ul>
+            <li><strong>Current Date and Time:</strong> Displayed in the top-right corner (format: MM/DD/YYYY HH:MM:SS)</li>
+            <li><strong>Logout Button:</strong> Click to safely end your session</li>
+        </ul>
+        
+        <h3>Bottom Bar</h3>
+        <ul>
+            <li><strong>Contact:</strong> Access help and support resources</li>
+            <li><strong>Manual:</strong> Access this documentation</li>
+        </ul>
+        
+        <h2>2.3 Common Interface Elements</h2>
+        <ul>
+            <li><strong>+ (Plus) Button:</strong> Add new records (appears in top-left corner of data screens)</li>
+            <li><strong>Search Box:</strong> Filter and find specific records</li>
+            <li><strong>Edit Button:</strong> Modify existing records</li>
+            <li><strong>Delete Button:</strong> Remove records (displayed in red)</li>
+            <li><strong>Dropdown Menus:</strong> Select from available options</li>
+            <li><strong>Data Tables:</strong> Display information in organized rows and columns</li>
+        </ul>
+    </div>
+
+    <!-- Section 3: Client Management -->
+    <div class="section">
+        <h1>3. Client Management</h1>
+        
+        <h2>3.1 Purpose</h2>
+        <p>The Client module manages platform information in the system. In this application, "Client" refers to different vehicle platforms or product lines (e.g., Cummins). Each client represents a distinct manufacturing platform with its own set of parts, ferrules, and quality control procedures.</p>
+        
+        <h2>3.2 Viewing Clients</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click on <strong>Client</strong> from the navigation menu</li>
+                <li>View the list of clients in a table format</li>
+            </ol>
+        </div>
+        
+        <p>The client table displays the following information:</p>
+        <ul>
+            <li><strong>Sr. No.:</strong> Serial number for reference</li>
+            <li><strong>Client Name:</strong> Name of the platform (e.g., Cummins)</li>
+            <li><strong>Edit:</strong> Option to modify client details</li>
+            <li><strong>Delete:</strong> Option to remove the client</li>
+        </ul>
+        
+        <h2>3.3 Adding a New Client</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>+ (Plus)</strong> button in the top-left corner</li>
+                <li>Enter the required client information in the form</li>
+                <li>Fill in all mandatory fields</li>
+                <li>Click <strong>Save</strong> to add the client to the system</li>
+            </ol>
+        </div>
+        
+        <h2>3.4 Editing a Client</h2>
+        <div class="step-box">
+            <ol>
+                <li>Locate the client you want to edit in the table</li>
+                <li>Click the <strong>Edit</strong> button in the corresponding row</li>
+                <li>Modify the client details as needed</li>
+                <li>Click <strong>Save</strong> to update the information</li>
+                <li>Click <strong>Cancel</strong> to discard changes</li>
+            </ol>
+        </div>
+        
+        <h2>3.5 Deleting a Client</h2>
+        <div class="warning-box">
+            <h3>Critical Warning</h3>
+            <p>Deleting a client (platform) is a critical operation that cannot be undone. Please read the Important Cautions section before proceeding with client deletion.</p>
+        </div>
+        
+        <div class="step-box">
+            <ol>
+                <li>Locate the client you want to delete</li>
+                <li>Click the <strong>Delete</strong> button (displayed in red)</li>
+                <li>Read the confirmation dialog carefully</li>
+                <li>Confirm the deletion only if you are certain</li>
+            </ol>
+        </div>
+        
+        <h2>3.6 Search Functionality</h2>
+        <div class="step-box">
+            <ol>
+                <li>Use the search box at the top-right of the screen</li>
+                <li>Type the client name or keyword</li>
+                <li>Click the <strong>Search</strong> button to filter results</li>
+                <li>Click the <strong>×</strong> icon to clear the search and show all clients</li>
+            </ol>
+        </div>
+        
+        <div class="info-box">
+            <h3>Best Practice</h3>
+            <p>Set up all clients (platforms) at the beginning of your system configuration. This provides the foundation for all other data in the system.</p>
+        </div>
+    </div>
+
+    <!-- Section 4: Parts Management -->
+    <div class="section">
+        <h1>4. Parts Management</h1>
+        
+        <h2>4.1 Purpose</h2>
+        <p>The Parts module manages detailed information about ferrule parts including part numbers, names, specifications, and associated models. Parts are the core components that undergo quality control inspection.</p>
+        
+        <h2>4.2 Understanding Parts Data Structure</h2>
+        <p>Parts in the system contain comprehensive information including:</p>
+        <ul>
+            <li>Part Number (e.g., A072C004)</li>
+            <li>Part Name (e.g., Shakti CT Big)</li>
+            <li>Ratio (e.g., 1000/5A)</li>
+            <li>Burden (e.g., burden1)</li>
+            <li>Label Type (e.g., Rectangular Type 71X19)</li>
+            <li>Ferrules count and configuration</li>
+            <li>Ferrule Direction (e.g., S1,S2,S1,S2,S1,S2,S1,U,U,S2,U,S1)</li>
+            <li>Image path for visual reference</li>
+            <li>Severity level</li>
+            <li>Attributes and highlights</li>
+            <li>Location information</li>
+            <li>OCR operations</li>
+        </ul>
+        
+        <h2>4.3 Viewing Parts (Ferrules View)</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click on <strong>Parts</strong> from the navigation menu</li>
+                <li>Select a <strong>Client</strong> from the dropdown at the top</li>
+                <li>View parts in the simplified table showing:
+                    <ul>
+                        <li>Part No</li>
+                        <li>Part Name</li>
+                        <li>Update option (green link)</li>
+                        <li>Edit option</li>
+                        <li>Delete option</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <h2>4.4 Viewing Complete Parts Details</h2>
+        <p>When viewing the full parts list from the main navigation, you'll see comprehensive information:</p>
+        
+        <div class="example-box">
+            <strong>Example Entry:</strong><br>
+            Sr. No: 1<br>
+            Part No: A072C004<br>
+            Part Name: Shakti CT Big<br>
+            Ratio: 1000/5A<br>
+            Burden: burden1<br>
+            Label Type: Rectangular Type (71X19)<br>
+            Ferrules: 12<br>
+            Ferrule Direction: S1,S2,S1,S2,S1,S2,S1,U,U,S2,U,S1
+        </div>
+        
+        <h2>4.5 Adding a New Part</h2>
+        <div class="step-box">
+            <ol>
+                <li>Select a client from the dropdown menu</li>
+                <li>Click the <strong>+ (Plus)</strong> button in the top-left corner</li>
+                <li>Fill in the required information:
+                    <ul>
+                        <li><strong>Part Number:</strong> Enter unique part identifier</li>
+                        <li><strong>Part Name:</strong> Descriptive name of the part</li>
+                        <li><strong>Ratio:</strong> Specify the ratio (e.g., 1000/5A)</li>
+                        <li><strong>Burden:</strong> Enter burden specification</li>
+                        <li><strong>Label Type:</strong> Select or enter label type</li>
+                        <li><strong>Image Path:</strong> Path to part image</li>
+                        <li><strong>Severity:</strong> Select severity level</li>
+                        <li><strong>Attribute:</strong> Define part attributes</li>
+                        <li><strong>Highlight:</strong> Set highlight properties</li>
+                        <li><strong>Location:</strong> Physical location information</li>
+                        <li><strong>OCR Operation:</strong> Optical character recognition settings</li>
+                        <li><strong>Model Codes:</strong> Select applicable model codes based on selected platform</li>
+                    </ul>
+                </li>
+                <li>Click <strong>Save</strong> to create the part</li>
+            </ol>
+        </div>
+        
+        <h2>4.6 Duplicate Part Numbers</h2>
+        <p>The system allows duplicate part numbers for managing variations:</p>
+        <ul>
+            <li>Use when the same part exists with different model specifications</li>
+            <li>Enables tracking of part variations across different models</li>
+            <li>Each duplicate maintains its own set of checkpoints and connections</li>
+        </ul>
+        
+        <h2>4.7 Adding Custom Parts</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>Add Custom Part</strong> button</li>
+                <li>Fill in custom part details:
+                    <ul>
+                        <li>Severity level</li>
+                        <li>Attributes</li>
+                        <li>Highlight settings</li>
+                        <li>Concerns or special notes</li>
+                        <li>Location information</li>
+                        <li>User level access</li>
+                    </ul>
+                </li>
+                <li>Save the custom part configuration</li>
+            </ol>
+        </div>
+        
+        <h2>4.8 Updating Parts</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>Update</strong> link (displayed in green) next to the part</li>
+                <li>Access the checkpoint and image update screen</li>
+                <li>Make necessary changes to:
+                    <ul>
+                        <li>Checkpoints associated with the part</li>
+                        <li>Images for the part</li>
+                        <li>Model associations</li>
+                    </ul>
+                </li>
+                <li>Save updates to apply changes</li>
+            </ol>
+        </div>
+        
+        <h2>4.9 Editing Parts</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>Edit</strong> button next to the part</li>
+                <li>Modify part information in the edit form</li>
+                <li>Update any field as needed</li>
+                <li>Click <strong>Save</strong> to update the part</li>
+                <li>Click <strong>Cancel</strong> to discard changes</li>
+            </ol>
+        </div>
+        
+        <h2>4.10 Deleting Parts</h2>
+        <div class="warning-box">
+            <h3>Important Warning</h3>
+            <p>Before deleting a part, check if it is connected to any model connections. Deleting a part will also delete all associated checkpoints. See the Important Cautions section for details.</p>
+        </div>
+        
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>Delete</strong> button (red text) next to the part</li>
+                <li>Review the warning message carefully</li>
+                <li>Confirm deletion only if you are certain</li>
+            </ol>
+        </div>
+        
+        <h2>4.11 Search Functionality</h2>
+        <div class="step-box">
+            <ol>
+                <li>Use the search box to find parts by name or part number</li>
+                <li>Enter your search term</li>
+                <li>Click <strong>Search</strong> to filter results</li>
+                <li>Clear the search to view all parts</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Section 5: Ferrules Management -->
+    <div class="section">
+        <h1>5. Ferrules Management</h1>
+        
+        <h2>5.1 Purpose</h2>
+        <p>The Ferrules module manages information about ferrule configurations. Ferrules are connection points or terminals used in electrical components that undergo quality control inspection. Each ferrule has specific characteristics and is associated with particular model codes.</p>
+        
+        <h2>5.2 Understanding Ferrules</h2>
+        <p>Ferrules in the system represent:</p>
+        <ul>
+            <li>Specific connection terminals on parts</li>
+            <li>Numbered identification (e.g., Ferrule No: 12)</li>
+            <li>Named configurations (e.g., Shakti CT Big)</li>
+            <li>Associations with specific parts and models</li>
+        </ul>
+        
+        <h2>5.3 Viewing Ferrules</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click on <strong>Ferrules</strong> from the navigation menu</li>
+                <li>Select a <strong>Client</strong> from the dropdown menu</li>
+                <li>View ferrule information in the data table</li>
+                <li>Review ferrule numbers, names, and associated data</li>
+            </ol>
+        </div>
+        
+        <h2>5.4 Adding Ferrules</h2>
+        <div class="step-box">
+            <ol>
+                <li>Select the client platform from the dropdown</li>
+                <li>Click the <strong>+ (Plus)</strong> button in the top-left corner</li>
+                <li>Enter required ferrule information:
+                    <ul>
+                        <li><strong>Ferrule Name:</strong> Descriptive name (e.g., Shakti CT Big)</li>
+                        <li><strong>Ferrule Number:</strong> Numeric identifier (e.g., 12)</li>
+                        <li><strong>Model Code Length:</strong> Associated model code specifications</li>
+                    </ul>
+                </li>
+                <li>Click <strong>Save</strong> to create the ferrule</li>
+            </ol>
+        </div>
+        
+        <h2>5.5 Editing Ferrules</h2>
+        <div class="step-box">
+            <ol>
+                <li>Find the ferrule in the data table</li>
+                <li>Click the <strong>Edit</strong> button for that ferrule</li>
+                <li>Modify details as needed:
+                    <ul>
+                        <li>Update ferrule name</li>
+                        <li>Change ferrule number</li>
+                        <li>Adjust model code length</li>
+                    </ul>
+                </li>
+                <li>Save changes to update the ferrule</li>
+            </ol>
+        </div>
+        
+        <h2>5.6 Deleting Ferrules</h2>
+        <div class="step-box">
+            <ol>
+                <li>Locate the ferrule you want to delete</li>
+                <li>Click the <strong>Delete</strong> button for that specific ferrule</li>
+                <li>Confirm the deletion when prompted</li>
+            </ol>
+        </div>
+        
+        <div class="info-box">
+            <h3>Note on Ferrule Deletion</h3>
+            <p>Check ferrule connections before deletion to ensure you don't remove ferrules that are actively used in quality control processes.</p>
+        </div>
+        
+        <h2>5.7 Search Filter</h2>
+        <div class="step-box">
+            <ol>
+                <li>Use the search filter to find specific ferrules</li>
+                <li>Enter ferrule name or number</li>
+                <li>Filter results based on selected platform</li>
+                <li>Clear filter to view all ferrules for the selected client</li>
+            </ol>
+        </div>
+        
+        <h2>5.8 Ferrule Relationship with Parts</h2>
+        <p>Ferrules are closely tied to parts in the system:</p>
+        <ul>
+            <li>Each part can have multiple ferrules (e.g., Part A072C004 has 12 ferrules)</li>
+            <li>Ferrules have specific directions (S1, S2, U configurations)</li>
+            <li>Checkpoints are created for each ferrule on a part</li>
+            <li>Quality control inspections focus on individual ferrules</li>
+        </ul>
+    </div>
+
+    <!-- Section 6: Checkpoints Management -->
+    <div class="section">
+        <h1>6. Checkpoints Management</h1>
+        
+        <h2>6.1 Purpose</h2>
+        <p>The Checkpoints module is the core of the quality control process. It defines specific inspection points for each ferrule on each part. Checkpoints include descriptions, images, and image processing configurations to guide inspectors during the QC process.</p>
+        
+        <h2>6.2 Understanding Checkpoints</h2>
+        <p>A checkpoint represents:</p>
+        <ul>
+            <li>A specific inspection point on a ferrule</li>
+            <li>Visual reference through uploaded images</li>
+            <li>Processing instructions for automated inspection</li>
+            <li>Association with specific parts and ferrules</li>
+            <li>Model-specific inspection criteria</li>
+        </ul>
+        
+        <h2>6.3 Viewing Checkpoints</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click on <strong>Checkpoints</strong> from the navigation menu</li>
+                <li>Select <strong>Client</strong> from the first dropdown (e.g., Cummins)</li>
+                <li>Select <strong>Part</strong> from the second dropdown (e.g., A072C004 - Shakti CT Big)</li>
+                <li>View checkpoints in the table displaying:
+                    <ul>
+                        <li>Part number and name</li>
+                        <li>Ferrules No and Name</li>
+                        <li>Checkpoint description</li>
+                        <li>Associated image</li>
+                        <li>Edit and Delete options</li>
+                        <li>Select checkbox</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <div class="example-box">
+            <strong>Example Checkpoint Entry:</strong><br>
+            Part: A072C004<br>
+            Part Name: Shakti CT Big<br>
+            Ferrules No: 12<br>
+            Ferrules Name: Shakti CT Big<br>
+            Checkpoint: 1<br>
+            Image: No Image (or image preview shown)
+        </div>
+        
+        <h2>6.4 Adding a Checkpoint</h2>
+        <div class="step-box">
+            <ol>
+                <li>Select the client (platform) from the dropdown</li>
+                <li>Select specific model codes if applicable</li>
+                <li>Click the <strong>+ (Plus)</strong> button in the top-left corner</li>
+                <li>The "Add Checkpoint" dialog will appear</li>
+                <li>Fill in the checkpoint form:
+                    <ul>
+                        <li><strong>Part:</strong> Select from dropdown (auto-populated based on client)</li>
+                        <li><strong>Part Name:</strong> Auto-filled based on selected part</li>
+                        <li><strong>Select a Ferrules:</strong> Choose the specific ferrule from dropdown</li>
+                        <li><strong>Checkpoint:</strong> Enter checkpoint description or identifier</li>
+                        <li><strong>Upload Image:</strong> Click "Browse..." to select an image file</li>
+                        <li><strong>Deselect Checkbox:</strong> Use if needed to deselect options</li>
+                        <li><strong>Image Processing Type:</strong> Select processing type from dropdown</li>
+                    </ul>
+                </li>
+                <li>Click <strong>Save</strong> to create the checkpoint</li>
+                <li>Click <strong>Cancel</strong> to discard and close the dialog</li>
+            </ol>
+        </div>
+        
+        <h2>6.5 Editing a Checkpoint</h2>
+        <div class="step-box">
+            <ol>
+                <li>Find the checkpoint in the table</li>
+                <li>Click the <strong>Edit</strong> button for that checkpoint</li>
+                <li>The "Edit Checkpoint" dialog will open</li>
+                <li>Modify checkpoint details:
+                    <ul>
+                        <li>Update Part selection</li>
+                        <li>Update Part Name</li>
+                        <li>Change Ferrules selection</li>
+                        <li>Modify Checkpoint text/description</li>
+                        <li>Upload a new image or remove existing one</li>
+                        <li>Change Image Processing Type</li>
+                    </ul>
+                </li>
+                <li>Click <strong>Save</strong> to apply changes</li>
+                <li>Click <strong>Cancel</strong> to discard changes</li>
+            </ol>
+        </div>
+        
+        <h2>6.6 Automatic Checkpoint Updates</h2>
+        <p>The system provides an automatic update feature for efficiently updating checkpoints across multiple models:</p>
+        
+        <div class="step-box">
+            <ol>
+                <li>Navigate to the <strong>Update Checkpoint, img Screen</strong></li>
+                <li>Select image processing type from dropdown</li>
+                <li>Select the models you want to apply changes to</li>
+                <li>Enter checkpoint information</li>
+                <li>Upload the image</li>
+                <li>The system will automatically update all parts with associated checkpoints</li>
+            </ol>
+        </div>
+        
+        <div class="info-box">
+            <h3>Bulk Update Benefit</h3>
+            <p>This feature is particularly useful when the same checkpoint needs to be applied to multiple models, saving significant time compared to manual entry for each model.</p>
+        </div>
+        
+        <h2>6.7 Deleting Checkpoints</h2>
+        
+        <h3>Single Checkpoint Deletion</h3>
+        <div class="step-box">
+            <ol>
+                <li>Locate the checkpoint you want to delete</li>
+                <li>Click the <strong>Delete</strong> button (displayed in red)</li>
+                <li>Confirm the deletion when prompted</li>
+            </ol>
+        </div>
+        
+        <h3>Bulk Checkpoint Deletion</h3>
+        <div class="step-box">
+            <ol>
+                <li>Select multiple checkpoints using the <strong>Select</strong> checkbox in each row</li>
+                <li>Click the <strong>Delete Selected</strong> button at the bottom of the table</li>
+                <li>Confirm the bulk deletion when prompted</li>
+                <li>All selected checkpoints will be removed</li>
+            </ol>
+        </div>
+        
+        <h2>6.8 Search Functionality</h2>
+        <div class="step-box">
+            <ol>
+                <li>Use the search box labeled "Search Checkpoint..."</li>
+                <li>Enter search terms to find checkpoints by:
+                    <ul>
+                        <li>Checkpoint number</li>
+                        <li>Part name</li>
+                        <li>Ferrule name</li>
+                    </ul>
+                </li>
+                <li>Click <strong>Search</strong> to filter results</li>
+                <li>Note: Images are filtered based on models connected to the selected part</li>
+            </ol>
+        </div>
+        
+        <h2>6.9 Image Processing</h2>
+        <p>Checkpoints support image processing for automated quality control:</p>
+        <ul>
+            <li>Select appropriate image processing type from dropdown when adding/editing checkpoints</li>
+            <li>Image processing types define how the system analyzes checkpoint images</li>
+            <li>Apply specific processing to designated models</li>
+            <li>Ensure images are clear and properly oriented for accurate processing</li>
+        </ul>
+        
+        <div class="info-box">
+            <h3>Image Quality Tips</h3>
+            <ul>
+                <li>Upload high-resolution images for best results</li>
+                <li>Ensure proper lighting in checkpoint images</li>
+                <li>Frame the ferrule clearly in the image</li>
+                <li>Use consistent image formats (JPG, PNG recommended)</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Section 7: Ferrules Connection -->
+    <div class="section">
+        <h1>7. Ferrules Connection</h1>
+        
+        <h2>7.1 Purpose</h2>
+        <p>The Ferrules Connection module establishes relationships between ferrules, parts, and specific model codes. This is a critical configuration step that defines which ferrules apply to which models, enabling the system to perform accurate quality control checks.</p>
+        
+        <h2>7.2 Understanding Connections</h2>
+        <p>Connections define:</p>
+        <ul>
+            <li>Which ferrules are present on which models</li>
+            <li>The relationship between parts and model variations</li>
+            <li>Quality control scope for each model</li>
+            <li>Inspection requirements per model configuration</li>
+        </ul>
+        
+        <h2>7.3 Accessing Ferrules Connection</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click on <strong>Ferrules Connection</strong> from the navigation menu</li>
+                <li>You'll see the connection interface with two operational modes:
+                    <ul>
+                        <li><strong>Connect Mode</strong> (default) - For creating new connections</li>
+                        <li><strong>Copy Mode</strong> - For duplicating existing connections</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <h2>7.4 Connect Mode</h2>
+        <p>Use Connect Mode to establish new ferrule-to-model relationships.</p>
+        
+        <h3>Making Connections</h3>
+        <div class="step-box">
+            <ol>
+                <li>Select <strong>Client</strong> from the dropdown at the top (e.g., Cummins)</li>
+                <li>Choose between two connection methods:</li>
+            </ol>
+        </div>
+        
+        <h4>Method 1: To Models</h4>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>To Models</strong> button</li>
+                <li>A model selection interface will appear</li>
+                <li>Select the specific models you want to connect ferrules to</li>
+                <li>Choose the relevant ferrules for these models</li>
+                <li>Click <strong>Connect</strong> to establish the connection</li>
+            </ol>
+        </div>
+        
+        <h4>Method 2: Select Ferrules</h4>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>Select Ferrules</strong> button</li>
+                <li>Choose specific ferrules from the available list</li>
+                <li>Select the models these ferrules apply to</li>
+                <li>Click <strong>Connect</strong> to link them together</li>
+            </ol>
+        </div>
+        
+        <h2>7.5 Copy Mode</h2>
+        <p>Copy Mode is a powerful time-saving feature that allows you to duplicate ferrule connections from one model to another. This is especially useful when setting up similar model configurations.</p>
+        
+        <h3>Copying Connections Between Models</h3>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>Copy Mode</strong> button to switch from Connect Mode</li>
+                <li>The interface will change to show copy options</li>
+                <li>Follow these steps to copy connections:
+                    <ul>
+                        <li>Select the model code whose part connection you want to copy from</li>
+                        <li>Use the <strong>"Copy From"</strong> function</li>
+                        <li>In the <strong>"From Model"</strong> section, select the source model code</li>
+                        <li>In the <strong>"To Model"</strong> section, select the destination model code</li>
+                        <li>Click the <strong>"Copy Data"</strong> button</li>
+                    </ul>
+                </li>
+                <li>The system will replicate all ferrule connections from the source model to the destination model</li>
+                <li>Verify the copied connections are correct</li>
+            </ol>
+        </div>
+        
+        <div class="info-box">
+            <h3>Copy Mode Use Cases</h3>
+            <ul>
+                <li>Setting up multiple similar model variants</li>
+                <li>Creating template configurations</li>
+                <li>Quickly replicating proven configurations</li>
+                <li>Reducing manual data entry errors</li>
+            </ul>
+        </div>
+        
+        <h2>7.6 Verification and Management</h2>
+        
+        <h3>Verifying Connections</h3>
+        <div class="step-box">
+            <ol>
+                <li>After creating connections, review them carefully</li>
+                <li>Select the platform and model to view current connections</li>
+                <li>Check that all required ferrules are connected</li>
+                <li>Verify no unnecessary connections exist</li>
+            </ol>
+        </div>
+        
+        <h3>Modifying Connections</h3>
+        <ul>
+            <li>To remove a connection, select the model and ferrule, then disconnect</li>
+            <li>To add additional connections, use Connect Mode</li>
+            <li>To replace connections entirely, use Copy Mode from a corrected source model</li>
+        </ul>
+        
+        <h2>7.7 Best Practices</h2>
+        <ul>
+            <li><strong>Always select the platform (client) first</strong> before making connections</li>
+            <li><strong>Verify connections before applying</strong> to avoid incorrect quality control configurations</li>
+            <li><strong>Use Copy Mode efficiently</strong> for similar model setups to save time</li>
+            <li><strong>Double-check connections</strong> before proceeding to checkpoint creation</li>
+            <li><strong>Document your connection logic</strong> for future reference</li>
+            <li><strong>Test connections</strong> with a sample inspection before full deployment</li>
+        </ul>
+        
+        <div class="warning-box">
+            <h3>Connection Impact</h3>
+            <p>Ferrule connections directly affect which checkpoints are applied during quality control. Incorrect connections can lead to missed inspections or unnecessary checks. Always verify your connections thoroughly.</p>
+        </div>
+    </div>
+
+    <!-- Section 8: Employees Management -->
+    <div class="section">
+        <h1>8. Employees Management</h1>
+        
+        <h2>8.1 Purpose</h2>
+        <p>The Employees module manages user accounts for personnel who operate the QC system. This includes both operators who perform inspections and supervisors who oversee the quality control process.</p>
+        
+        <h2>8.2 Understanding User Levels</h2>
+        <p>The system supports two user levels:</p>
+        
+        <table>
+            <tr>
+                <th>User Level</th>
+                <th>Description</th>
+                <th>Typical Permissions</th>
+            </tr>
+            <tr>
+                <td><strong>Supervisor</strong></td>
+                <td>Higher access level for oversight</td>
+                <td>Can oversee operations, access reports, manage settings</td>
+            </tr>
+            <tr>
+                <td><strong>Operator</strong></td>
+                <td>Standard user level</td>
+                <td>Perform QC inspections, enter data, view assigned tasks</td>
+            </tr>
+        </table>
+        
+        <h2>8.3 Viewing Employees</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click on <strong>Employees</strong> from the navigation menu</li>
+                <li>View the employee list in table format showing:
+                    <ul>
+                        <li>Sr. No. (Serial Number)</li>
+                        <li>Token No (Employee ID)</li>
+                        <li>Employee Name</li>
+                        <li>User Level (Supervisor/Operator)</li>
+                        <li>Edit option</li>
+                        <li>Delete option</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <h2>8.4 Adding an Employee</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>+ (Plus)</strong> button at the top-left of the screen</li>
+                <li>The "Add Employee" dialog will appear</li>
+                <li>Fill in the employee information:
+                    <ul>
+                        <li><strong>User Level:</strong> Select from dropdown
+                            <ul>
+                                <li>Supervisor</li>
+                                <li>Operator</li>
+                            </ul>
+                        </li>
+                        <li><strong>Token No:</strong> Enter employee token/ID number (must be unique)</li>
+                        <li><strong>Employee Name:</strong> Enter full name of the employee</li>
+                    </ul>
+                </li>
+                <li>Click <strong>Save</strong> to add the employee to the system</li>
+                <li>Click <strong>Cancel</strong> to discard</li>
+            </ol>
+        </div>
+        
+        <h2>8.5 Editing Employee Information</h2>
+        <div class="step-box">
+            <ol>
+                <li>Locate the employee in the table</li>
+                <li>Click the <strong>Edit</strong> button in their row</li>
+                <li>Modify the employee details as needed:
+                    <ul>
+                        <li>Change user level</li>
+                        <li>Update token number</li>
+                        <li>Correct employee name</li>
+                    </ul>
+                </li>
+                <li>Click <strong>Save</strong> to update the information</li>
+            </ol>
+        </div>
+        
+        <h2>8.6 Deleting an Employee</h2>
+        <div class="warning-box">
+            <h3>Caution</h3>
+            <p>Do not delete active employee accounts. Ensure the employee is no longer using the system before deletion. Deleting an employee may affect historical data tracking.</p>
+        </div>
+        
+        <div class="step-box">
+            <ol>
+                <li>Find the employee in the table</li>
+                <li>Click the <strong>Delete</strong> button</li>
+                <li>Confirm the deletion when prompted</li>
+            </ol>
+        </div>
+        
+        <h2>8.7 Employee Data Management</h2>
+        
+        <h3>Token Numbers</h3>
+        <ul>
+            <li>Keep token numbers unique for each employee</li>
+            <li>Use a consistent numbering system</li>
+            <li>Token numbers are used for employee identification in the system</li>
+            <li>May be linked to physical badges or access cards</li>
+        </ul>
+        
+        <h3>User Level Assignment</h3>
+        <ul>
+            <li>Assign user levels based on job responsibilities</li>
+            <li>Supervisors should have oversight and management duties</li>
+            <li>Operators should be frontline QC personnel</li>
+            <li>Review and update user levels as employees' roles change</li>
+        </ul>
+        
+        <h2>8.8 Best Practices</h2>
+        <ul>
+            <li><strong>Maintain accurate employee records</strong> for proper accountability</li>
+            <li><strong>Assign appropriate user levels</strong> based on training and responsibility</li>
+            <li><strong>Keep token numbers consistent</strong> with your organization's ID system</li>
+            <li><strong>Update employee information promptly</strong> when changes occur</li>
+            <li><strong>Archive rather than delete</strong> when employees leave (if system supports it)</li>
+            <li><strong>Review employee list regularly</strong> to ensure it's current</li>
+        </ul>
+        
+        <div class="info-box">
+            <h3>Security Note</h3>
+            <p>Employee accounts are tied to QC activities and reporting. Maintain accurate employee data to ensure proper traceability and accountability in your quality control processes.</p>
+        </div>
+    </div>
+
+    <!-- Section 9: Reports -->
+    <div class="section">
+        <h1>9. Reports</h1>
+        
+        <h2>9.1 Purpose</h2>
+        <p>The Reports module provides comprehensive analysis and documentation of quality control activities. Reports help track inspection results, identify trends, and maintain quality records for compliance and continuous improvement.</p>
+        
+        <h2>9.2 Accessing Reports</h2>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>Reports</strong> button from the navigation menu</li>
+                <li>You'll access the reports dashboard with multiple report types available</li>
+            </ol>
+        </div>
+        
+        <h2>9.3 Available Report Types</h2>
+        <p>The system provides three main report categories:</p>
+        <ol>
+            <li><strong>VIN Detail Report</strong> - Vehicle-specific inspection details</li>
+            <li><strong>Highlight Report</strong> - Focus on highlighted issues and concerns</li>
+            <li><strong>Vehicle Report</strong> - Comprehensive vehicle-level reporting</li>
+        </ol>
+        
+        <h2>9.4 VIN Detail Report</h2>
+        
+        <h3>Purpose</h3>
+        <p>Generate detailed reports on vehicle inspection numbers (VINs) with complete status tracking and inspection history.</p>
+        
+        <h3>Generating a VIN Detail Report</h3>
+        <div class="step-box">
+            <ol>
+                <li>Navigate to the VIN Detail Report section</li>
+                <li>Apply filters as needed to narrow down results:
+                    <ul>
+                        <li><strong>Status:</strong> Select OK (passed) or NOK (not okay/failed)</li>
+                        <li><strong>QC Number:</strong> Enter specific QC reference number</li>
+                        <li><strong>Date:</strong> Select specific date</li>
+                        <li><strong>Month:</strong> Choose month for monthly reports</li>
+                        <li><strong>Year:</strong> Select year for annual reports</li>
+                        <li><strong>Platform:</strong> Select client/platform (e.g., Cummins)</li>
+                        <li><strong>Shift:</strong> Filter by work shift</li>
+                        <li><strong>Operator:</strong> Select specific operator</li>
+                        <li><strong>Model Code:</strong> Choose model (based on selected platform)</li>
+                    </ul>
+                </li>
+                <li>Click the <strong>Generate Reports</strong> button</li>
+                <li>View results displayed in both:
+                    <ul>
+                        <li><strong>Pie Chart:</strong> Visual representation of OK vs NOK status distribution</li>
+                        <li><strong>Data Table:</strong> Detailed listing of all inspection records</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <h3>Report Export Options</h3>
+        <div class="step-box">
+            <ol>
+                <li><strong>Export Excel:</strong> Click to download report as an Excel file (.xlsx)
+                    <ul>
+                        <li>Contains all data fields</li>
+                        <li>Suitable for further analysis</li>
+                        <li>Can be opened in Microsoft Excel, Google Sheets, etc.</li>
+                    </ul>
+                </li>
+                <li><strong>Export PDF:</strong> Click to download report as a PDF file
+                    <ul>
+                        <li>Professional formatted document</li>
+                        <li>Suitable for printing and archiving</li>
+                        <li>Maintains visual formatting</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <h3>Clearing Filters</h3>
+        <div class="step-box">
+            <ol>
+                <li>Click the <strong>Clear Filter</strong> button</li>
+                <li>All applied filters will be removed</li>
+                <li>Start over with fresh filter selections</li>
+            </ol>
+        </div>
+        
+        <h3>Detailed View Features</h3>
+        <div class="step-box">
+            <ol>
+                <li><strong>Clickable Highlighted Text:</strong>
+                    <ul>
+                        <li>Click on highlighted VIN numbers or status indicators</li>
+                        <li>Opens a detailed report for that specific vehicle</li>
+                    </ul>
+                </li>
+                <li><strong>Detailed Report Information Includes:</strong>
+                    <ul>
+                        <li>VIN (Vehicle Identification Number)</li>
+                        <li>Status (OK/NOK)</li>
+                        <li>Shift information</li>
+                        <li>Platform/Client</li>
+                        <li>Location</li>
+                        <li>QC Number</li>
+                        <li>Date and time of QC inspection</li>
+                    </ul>
+                </li>
+                <li><strong>Detailed View Filtering:</strong>
+                    <ul>
+                        <li>Filter by location</li>
+                        <li>Filter by status</li>
+                        <li>Filter by QC number</li>
+                        <li>Export filtered results as Excel or PDF</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <h3>Status Distribution (Pie Chart)</h3>
+        <p>The pie chart displays:</p>
+        <ul>
+            <li><strong>OK Status:</strong> Count of vehicles that passed inspection</li>
+            <li><strong>NOK Status:</strong> Count of vehicles with issues/failures</li>
+            <li>Visual percentage breakdown</li>
+            <li>Color-coded for easy interpretation (typically green for OK, red for NOK)</li>
+        </ul>
+        
+        <h3>Part Images View</h3>
+        <div class="step-box">
+            <ol>
+                <li>In the data table, locate the <strong>eye icon (👁)</strong> next to an entry</li>
+                <li>Click the eye icon</li>
+                <li>View images of the parts for that specific vehicle</li>
+                <li>Useful for:
+                    <ul>
+                        <li>Visual verification of inspection</li>
+                        <li>Detailed issue review</li>
+                        <li>Quality assurance documentation</li>
+                        <li>Training and reference purposes</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <h2>9.5 Highlight Report</h2>
+        
+        <h3>Purpose</h3>
+        <p>Track and report on highlighted issues or concerns identified during the QC process. This report focuses on items that require special attention or follow-up.</p>
+        
+        <h3>Generating Highlight Reports</h3>
+        <div class="step-box">
+            <ol>
+                <li>Access the Highlight Report from the Reports menu</li>
+                <li>Apply filters similar to VIN Detail Report:
+                    <ul>
+                        <li>Status, QC Number, Date, Platform, etc.</li>
+                    </ul>
+                </li>
+                <li>Click <strong>Generate Reports</strong></li>
+                <li>View all highlighted items in table and chart format</li>
+                <li>Export as Excel or PDF as needed</li>
+            </ol>
+        </div>
+        
+        <h3>Use Cases</h3>
+        <ul>
+            <li>Identifying recurring issues</li>
+            <li>Tracking special concerns</li>
+            <li>Managing follow-up actions</li>
+            <li>Quality trend analysis</li>
+        </ul>
+        
+        <h2>9.6 Vehicle Report</h2>
+        
+        <h3>Purpose</h3>
+        <p>Comprehensive vehicle-level reporting that aggregates all inspection parameters and provides a complete quality control overview for each vehicle.</p>
+        
+        <h3>Generating Vehicle Reports</h3>
+        <div class="step-box">
+            <ol>
+                <li>Access the Vehicle Report from the Reports menu</li>
+                <li>Apply relevant filters to focus on specific vehicles or time periods</li>
+                <li>Click <strong>Generate Reports</strong></li>
+                <li>View comprehensive vehicle data</li>
+                <li>Export and analyze as needed</li>
+            </ol>
+        </div>
+        
+        <h3>Report Features</h3>
+        <ul>
+            <li>Complete vehicle inspection history</li>
+            <li>All checkpoint results</li>
+            <li>Ferrule-level details</li>
+            <li>Operator and shift information</li>
+            <li>Full traceability data</li>
+        </ul>
+        
+        <h2>9.7 Report Best Practices</h2>
+        <ul>
+            <li><strong>Use specific filters</strong> to narrow down results for faster processing and more focused analysis</li>
+            <li><strong>Export reports regularly</strong> for record-keeping and compliance</li>
+            <li><strong>Use the pie chart</strong> for quick visual status assessment at a glance</li>
+            <li><strong>Review detailed views</strong> when investigating specific issues or failures</li>
+            <li><strong>Keep track of QC numbers</strong> for complete traceability</li>
+            <li><strong>Archive exported reports</strong> systematically for historical reference</li>
+            <li><strong>Review trends regularly</strong> to identify systematic issues</li>
+            <li><strong>Share reports</strong> with relevant stakeholders for transparency</li>
+        </ul>
+        
+        <div class="info-box">
+            <h3>Report Consistency</h3>
+            <p>The functionalities described for VIN Detail Report (filtering, export, detailed views, pie charts, image viewing) are consistent across all report types. Master these features once and apply them to any report category.</p>
+        </div>
+        
+        <h2>9.8 Report Analysis Tips</h2>
+        <ul>
+            <li>Compare OK vs NOK ratios over time to track quality trends</li>
+            <li>Identify patterns by operator to target training needs</li>
+            <li>Analyze by shift to understand time-based variations</li>
+            <li>Review model-specific issues for design or process improvements</li>
+            <li>Use exported Excel files for advanced statistical analysis</li>
+            <li>Create regular reporting schedules (daily, weekly, monthly)</li>
+        </ul>
+    </div>
+
+    <!-- Section 10: Important Cautions -->
+    <div class="section">
+        <h1>10. Important Cautions</h1>
+        
+        <div class="warning-box">
+            <h3>Critical Warnings</h3>
+            <p>This section contains critical information about operations that can result in permanent data loss. Please read carefully and follow all recommendations.</p>
+        </div>
+        
+        <h2>10.1 Platform (Client) Deletion</h2>
+        
+        <div class="warning-box">
+            <h3>EXTREME CAUTION REQUIRED</h3>
+            <p>Deleting a platform is one of the most destructive operations in the system. This action cannot be undone and will result in massive data loss.</p>
+        </div>
+        
+        <h3>What Gets Deleted</h3>
+        <p>When you delete a platform (client), the following data is <strong>permanently deleted</strong>:</p>
+        <ul>
+            <li><strong>All related serial numbers</strong> associated with that platform</li>
+            <li><strong>All connections</strong> between models, parts, and ferrules for that platform</li>
+            <li><strong>All parts</strong> linked to the platform</li>
+            <li><strong>All checkpoints</strong> for those parts</li>
+            <li><strong>All quality control data</strong> associated with the platform</li>
+            <li><strong>All historical inspection records</strong> for vehicles on that platform</li>
+        </ul>
+        
+        <h3>Before Deleting a Platform</h3>
+        <div class="step-box">
+            <ol>
+                <li><strong>Verify with all stakeholders</strong> that the platform is no longer needed</li>
+                <li><strong>Export all reports</strong> related to the platform for archival</li>
+                <li><strong>Document the deletion decision</strong> and obtain necessary approvals</li>
+                <li><strong>Consider archiving</strong> instead of deleting (if system supports it)</li>
+                <li><strong>Back up the database</strong> before proceeding</li>
+                <li><strong>Double-check</strong> that you've selected the correct platform</li>
+            </ol>
+        </div>
+        
+       

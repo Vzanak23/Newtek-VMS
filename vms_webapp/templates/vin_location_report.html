@@ -1,0 +1,790 @@
+{% extends 'base.html' %}
+{% load static %}
+<title>{% block title %} VIN Location Status Report {% endblock %}</title>
+<!-- FontAwesome for icons -->
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" /> -->
+
+<link rel="stylesheet" href="{% static 'node_modules/@fortawesome/fontawesome-free/css/all.min.css' %}">
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #fafafa;
+        margin: 0;
+    }
+
+    h2 {
+        color: #223355;
+        margin-bottom: 10px;
+        margin-top: 18px;
+        text-align: center;
+        font-size: 2em;
+        font-weight: 700;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #505d73;
+        margin-bottom: 14px;
+        font-size: 1.10em;
+    }
+
+    hr {
+        width: 60%;
+        margin: 18px auto 14px auto;
+        border-color: #bedaff;
+    }
+
+    .report-form {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 24px;
+        background: #f4f8fc;
+        padding: 18px 0;
+        border-radius: 18px;
+        margin-bottom: 24px;
+        max-width: 980px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #02366e;
+            font-size: 15px;
+        }
+        .form-group select {
+            padding: 8px;
+            border: 1px solid #aad2ee;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+        } */
+
+    /* modified form code */
+    /* Form Fields */
+    .form-group {
+        flex: 1;
+        margin: 0 10px;
+        min-width: 150px;
+    }
+
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .form-group select,
+    .form-group input[type="date"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .form-group select:focus,
+    .form-group input[type="date"]:focus {
+        outline: none;
+        border-color: #062A63;
+        background-color: white;
+    }
+
+
+    .button-group {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+    }
+
+    .report-button,
+    .excel-button,
+    .pdf-button {
+        background-color: #062A63;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        font-size: 15px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+    .report-button:hover,
+    .excel-button:hover,
+    .pdf-button:hover {
+        background-color: #045191;
+    }
+
+    .pie-chart-container {
+        max-width: 410px;
+        margin: 18px auto;
+        text-align: center;
+        /* background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 18px; */
+    }
+
+    .totals-info {
+        font-size: 15px;
+        font-weight: 600;
+        color: #223355;
+        margin-top: 12px;
+    }
+
+    .data-table {
+        width: 100%;
+        margin: 20px auto;
+        border-collapse: collapse;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .data-table thead th {
+        background-color: #02366e;
+        color: white;
+        padding: 12px;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .data-table tbody td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: center;
+        font-size: 14px;
+        color: #333;
+    }
+
+    /* Alternate Row Coloring */
+    .data-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .data-table tbody tr:nth-child(odd) {
+        background-color: #ffffff;
+    }
+
+    .data-table tbody tr:hover {
+        background-color: #e0f7fa;
+    }
+
+    .report-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px;
+        max-width: 1390px;
+        margin: 0 auto;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-form {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: end;
+        margin-bottom: 20px;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #062A63, #045191);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(6, 42, 99, 0.3);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545, #e74c3c);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-clear {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-clear:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+{% block content %}
+
+<!-- FILTER FORM -->
+<div class="filter-form">
+    <form id="reportFilterForm" method="GET">
+        <div class="filter-row">
+            <!-- Status -->
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select name="status" id="status" class="form-control">
+                    <option value="ALL" {% if filter_status == 'ALL' %}selected{% endif %}>All</option>
+                    <option value="OK" {% if filter_status == 'OK' %}selected{% endif %}>OK</option>
+                    <option value="NOK" {% if filter_status == 'NOK' %}selected{% endif %}>NOK</option>
+                </select>
+            </div>
+
+            <!-- QC No -->
+            <div class="form-group">
+                <label for="qc_no">QC No</label>
+                <select name="qc_no" id="qc_no" class="form-control">
+
+                    {% for qcnum in qc_nos %}
+                    <option value="{{ qcnum }}" {% if filter_qc_no == qcnum %}selected{% endif %}>{{ qcnum }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Date -->
+            <div class="form-group">
+                <label for="date"> Select Date</label>
+                <input type="date" id="date" name="date" class="form-control" value="{{ selected_date }}">
+            </div>
+
+            <!-- Month -->
+            <div class="form-group">
+                <label for="month"> Select Month</label>
+                <select id="month" name="month" class="form-control">
+                    <option value="">-- All --</option>
+                    <option value="1" {% if selected_month|stringformat:"s" == "1" %}selected{% endif %}>January</option>
+                    <option value="2" {% if selected_month|stringformat:"s" == "2" %}selected{% endif %}>February</option>
+                    <option value="3" {% if selected_month|stringformat:"s" == "3" %}selected{% endif %}>March</option>
+                    <option value="4" {% if selected_month|stringformat:"s" == "4" %}selected{% endif %}>April</option>
+                    <option value="5" {% if selected_month|stringformat:"s" == "5" %}selected{% endif %}>May</option>
+                    <option value="6" {% if selected_month|stringformat:"s" == "6" %}selected{% endif %}>June</option>
+                    <option value="7" {% if selected_month|stringformat:"s" == "7" %}selected{% endif %}>July</option>
+                    <option value="8" {% if selected_month|stringformat:"s" == "8" %}selected{% endif %}>August</option>
+                    <option value="9" {% if selected_month|stringformat:"s" == "9" %}selected{% endif %}>September
+                    </option>
+                    <option value="10" {% if selected_month|stringformat:"s" == "10" %}selected{% endif %}>October
+                    </option>
+                    <option value="11" {% if selected_month|stringformat:"s" == "11" %}selected{% endif %}>November
+                    </option>
+                    <option value="12" {% if selected_month|stringformat:"s" == "12" %}selected{% endif %}>December
+                    </option>
+                </select>
+            </div>
+
+            <!-- Year -->
+            <div class="form-group">
+            <label for="year"> Select Year</label>
+            <select id="year" name="year" class="form-control">
+                <option value="">-- All --</option>
+                {% for y in years %}
+                    <option value="{{ y }}" {% if selected_year|stringformat:"s" == y|stringformat:"s" %}selected{% endif %}>
+                        {{ y }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+            <div class="form-group" id="platform-group">
+                <label for="platform">Client</label>
+                <select name="platform" id="platform" class="form-control" onchange="this.form.submit()">
+                    <option value="all" {% if filter_platform == 'all' or not filter_platform %}selected{% endif %}>All Clients</option>
+                    {% for plat in platforms %}
+                        <option value="{{ plat }}" {% if filter_platform == plat %}selected{% endif %}>{{ plat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <script>
+                $(document).ready(function() {
+                    $('#platform').select2({
+                    placeholder: "Select a Client",
+                    allowClear: true,
+                    width: '100%'
+                    });
+                });
+                </script>
+            <!-- Part -->
+            <div class="form-group">
+                <label for="model_code"> Part</label>
+                <select name="model_code" id="model_code" class="form-control">
+                    <option value="">-- All --</option>
+                    {% for mc in model_codes %}
+                    <option value="{{ mc }}" {% if filter_model_code == mc %}selected{% endif %}>{{ mc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <script>
+                $(document).ready(function() {
+                    $('#model_code').select2({
+                    placeholder: "Select a Part",
+                    allowClear: true,
+                    width: '100%'
+                    });
+                });
+                </script>
+
+            <!-- Shift -->
+            <div class="form-group">
+                <label for="shift_name"> Shift</label>
+                <select name="shift_name" id="shift_name" class="form-control">
+                    <option value="">All</option>
+                    {% for s in shift_names %}
+                    <option value="{{ s }}" {% if filter_shift_name == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Operator -->
+            <div class="form-group">
+                <label for="operator"> Operator</label>
+                <select name="operator" id="operator" class="form-control">
+                    <option value="">All</option>
+                    {% for o in operators %}
+                    <option value="{{ o }}" {% if filter_operator == o %}selected{% endif %}>{{ o }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                 Generate Report
+            </button>
+            <button type="button" onclick="exportToExcel()" class="btn btn-secondary">
+                Export Excel
+            </button>
+            <button type="button" onclick="exportToPDF()" class="btn btn-danger">
+                 Export PDF
+            </button>
+            <button type="reset" id="clearFilters" class="btn btn-clear">
+                Clear Filters
+<script>
+document.getElementById('clearFilters').addEventListener('click', function(e) {
+    e.preventDefault();
+    // Reset all form fields
+    var form = document.getElementById('reportFilterForm');
+    form.reset();
+    // Remove all query parameters and reload page
+    window.location.href = window.location.pathname;
+});
+</script>
+<script>
+    // AJAX VIN column search and AJAX pagination for resultsContainer
+    document.addEventListener('DOMContentLoaded', function () {
+        var filterForm = document.getElementById('reportFilterForm');
+        var resultsContainer = document.getElementById('resultsContainer');
+        if (!filterForm || !resultsContainer) return;
+
+        var debounceTimer = null;
+
+        // Global caret storage so we can restore caret after AJAX replaces the input
+        window._vinCaret = window._vinCaret || { start: null, end: null };
+        function fetchResultsWithVin(vin) {
+            var params = new URLSearchParams(new FormData(filterForm));
+            if (vin !== undefined) params.set('vin', vin);
+
+            var url = window.location.pathname + '?' + params.toString();
+
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (res) { return res.text(); })
+                .then(function (html) {
+                    var tmp = document.createElement('div');
+                    tmp.innerHTML = html;
+                    var newResults = tmp.querySelector('#resultsContainer');
+                    if (newResults) {
+                        resultsContainer.innerHTML = newResults.innerHTML;
+                        // After replacing, re-bind pagination and VIN input listeners
+                        bindAjaxPagination();
+                        bindVinInput();
+
+                        // Try to restore caret position if we captured it before
+                        try {
+                            var newVin = document.getElementById('vinColumnSearch');
+                            if (newVin && window._vinCaret && window._vinCaret.start !== null) {
+                                newVin.focus();
+                                // clamp values
+                                var len = newVin.value.length;
+                                var s = Math.max(0, Math.min(len, window._vinCaret.start));
+                                var e = Math.max(0, Math.min(len, window._vinCaret.end));
+                                newVin.setSelectionRange(s, e);
+                            }
+                        } catch (e) {
+                            console.error('restore caret failed', e);
+                        }
+                    }
+                })
+                .catch(function (err) { console.error('VIN search fetch error', err); });
+        }
+
+        function bindVinInput() {
+            // Find the vin input inside the results container (it may be replaced)
+            var vinInput = document.getElementById('vinColumnSearch');
+            if (!vinInput) return;
+            // Avoid double-binding: use data-bound attribute
+            if (vinInput.dataset.bound === 'true') return;
+            vinInput.dataset.bound = 'true';
+
+            vinInput.addEventListener('input', function (evt) {
+                // capture caret position before debouncing
+                try {
+                    window._vinCaret.start = vinInput.selectionStart;
+                    window._vinCaret.end = vinInput.selectionEnd;
+                } catch (e) {
+                    window._vinCaret.start = null;
+                    window._vinCaret.end = null;
+                }
+
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () {
+                    fetchResultsWithVin(vinInput.value.trim());
+                }, 400);
+            });
+        }
+
+        function bindAjaxPagination() {
+            var links = resultsContainer.querySelectorAll('a');
+            links.forEach(function (a) {
+                if (a.href && (a.href.indexOf('page=') !== -1 || a.getAttribute('data-page'))) {
+                    // Remove existing handler by cloning
+                    var aClone = a.cloneNode(true);
+                    a.parentNode.replaceChild(aClone, a);
+                    aClone.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        var href = aClone.getAttribute('href');
+                        if (!href) return;
+                        fetch(href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(r => r.text())
+                            .then(html => {
+                                var tmp = document.createElement('div'); tmp.innerHTML = html;
+                                var newResults = tmp.querySelector('#resultsContainer');
+                                if (newResults) {
+                                    resultsContainer.innerHTML = newResults.innerHTML;
+                                    bindAjaxPagination();
+                                    bindVinInput();
+                                }
+                            });
+                    });
+                }
+            });
+        }
+
+        // Initial bindings
+        bindAjaxPagination();
+        bindVinInput();
+    });
+</script>
+            </button>
+        </div>
+    </form>
+</div>
+
+
+<div class="report-container">
+    <div class="chart-header">
+        <h2 class="chart-title"> Vehicles Status Count</h2>
+    </div>
+    <div class="pie-chart-container chart-section-oo">
+        <canvas id="okNokChart" width="340" height="340"></canvas>
+        <div class="totals-info">
+            OK: {{ ok_count }} &nbsp; | &nbsp; NOK: {{ nok_count }}
+        </div>
+    </div>
+</div>
+
+
+<div id="resultsContainer">
+    <table class="data-table" id="resultsTable">
+        <thead>
+            <tr>
+                <th>
+                    VIN<br>
+                    <input type="text" id="vinColumnSearch" class="form-control" placeholder="Search VIN (server)" value="{{ request.GET.vin|default:'' }}">
+                </th>
+                <th>Part</th>
+                {% for loc in locations %}
+                <th>{{ loc }}</th>
+                {% endfor %}
+                <th>ALL</th>
+                <th>QC No</th>
+                <th>Log Date</th>
+                <th>Shift Name</th> 
+                <th>Operator</th> 
+            </tr>
+        </thead>
+
+        <tbody>
+    {% for row in table_rows %}
+<tr>
+    <td>
+      <a href="{% url 'vin_detail' row.vin row.log_date %}?status={{ request.GET.status }}{% if filter_qc_no %}&qc_no={{ filter_qc_no }}{% endif %}{% if filter_shift_name %}&shift_name={{ filter_shift_name }}{% endif %}">
+    {{ row.vin|slice:":18" }}
+</a>
+
+    </td>
+    <td>{{ row.model_code }}</td>
+
+    {% for loc, status in row.status_with_location %}
+    <td>
+        <a href="{% url 'vin_detail' row.vin row.log_date %}?status={{ status }}&location={{ loc }}">
+            {{ status|default:"-" }}
+        </a>
+    </td>
+    {% endfor %}
+
+    <td>
+    <a href="{% url 'vin_detail' row.vin row.log_date %}?status={{ row.all_status }}">
+        {{ row.all_status|default:"-" }}
+    </a>
+</td>
+
+    <td>{{ row.qc_no }}</td>
+    <td>{{ row.log_date }}</td>
+    <td>{{ row.shift }}</td>
+    <td>{{ row.operator }}</td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+    </table>
+    <!-- Pagination Controls -->
+    <!-- keep your table HTML the same, use table_rows as you already did -->
+
+<!-- Pagination Controls -->
+<div style="margin: 20px 0; text-align: center;">
+    {% if page_obj.has_previous %}
+        <a href="?{% for k,v in request.GET.items %}{% if k != 'page' and k != 'page_size' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}&page_size={{ page_size }}" class="btn btn-secondary">Previous</a>
+    {% endif %}
+
+    <span style="margin:0 10px;">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?{% for k,v in request.GET.items %}{% if k != 'page' and k != 'page_size' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}&page_size={{ page_size }}" class="btn btn-primary">Next</a>
+    {% endif %}
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js, XLSX, jsPDF -->
+<script src="{% static 'node_modules/chart.js/dist/chart.umd.js' %}"></script>
+<script src="{% static 'node_modules/xlsx-js-style/dist/xlsx.min.js' %}"></script>
+<!-- <script src="{% static 'node_modules/xlsx/dist/xlsx.full.min.js' %}"></script> -->
+<script src="{% static 'node_modules/jspdf/dist/jspdf.umd.min.js' %}"></script>
+<script src="{% static 'node_modules/jspdf-autotable/dist/jspdf.plugin.autotable.min.js' %}"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var okCount = {{ ok_count }};
+        var nokCount = {{ nok_count }};
+        var ctx = document.getElementById('okNokChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ["OK", "NOK"],
+                datasets: [{
+                    data: [okCount, nokCount],
+                    backgroundColor: ["#4CAF50", "#FF5722"],
+                    hoverBackgroundColor: ["#388E3C", "#E64A19"]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let total = okCount + nokCount;
+                                let value = context.raw;
+                                let percent = total ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${value} (${percent}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    // Export to Excel function
+function exportToExcel() {
+    const headerData = [
+        ["VIN Report Filters"],
+        ["Status", document.getElementById("status").value || "All"],
+        ["QC No", document.getElementById("qc_no").value || "All"],
+        ["Date", document.getElementById("date").value || "All"],
+        ["Month", document.getElementById("month").value || "All"],
+        ["Year", document.getElementById("year").value || "All"],
+        ["Client", document.getElementById("platform").value || "All"],
+        ["Part", document.getElementById("model_code").value || "All"],
+        ["Shift", document.getElementById("shift_name").value || "All"],
+        ["Operator", document.getElementById("operator").value || "All"],
+        [], // Empty row for spacing
+    ];
+
+    // Create a temporary HTML table for export
+    var tempTable = document.createElement('table');
+    tempTable.style.display = 'none';
+
+    // Add filter header rows
+    headerData.forEach(function(row) {
+        var tr = document.createElement('tr');
+        row.forEach(function(cell) {
+            var td = document.createElement('td');
+            td.textContent = cell;
+            tr.appendChild(td);
+        });
+        tempTable.appendChild(tr);
+    });
+
+    // Add table header row
+    var table = document.getElementById('resultsTable');
+    var origHeader = table.tHead.rows[0];
+    var headerTr = document.createElement('tr');
+    for (var i = 0; i < origHeader.cells.length; i++) {
+        var th = document.createElement('td');
+        th.textContent = origHeader.cells[i].textContent;
+        headerTr.appendChild(th);
+    }
+    tempTable.appendChild(headerTr);
+
+    // Add table body rows
+    for (var r = 0; r < table.tBodies[0].rows.length; r++) {
+        var origRow = table.tBodies[0].rows[r];
+        var tr = document.createElement('tr');
+        for (var c = 0; c < origRow.cells.length; c++) {
+            var td = document.createElement('td');
+            td.textContent = origRow.cells[c].textContent;
+            tr.appendChild(td);
+        }
+        tempTable.appendChild(tr);
+    }
+
+    // Generate worksheet
+    document.body.appendChild(tempTable);
+    var ws = XLSX.utils.table_to_sheet(tempTable);
+    document.body.removeChild(tempTable);
+
+    // Apply bold style to headerData rows
+    // Apply bold only to first column of headerData rows
+    for (let r = 0; r < headerData.length; r++) {
+        const row = tempTable.rows[r];
+        if (row.cells.length > 0) {
+            const cellAddress = XLSX.utils.encode_cell({ r: r, c: 0 }); // Only column 0
+            if (!ws[cellAddress]) continue;
+            if (!ws[cellAddress].s) ws[cellAddress].s = {};
+            ws[cellAddress].s.font = { bold: true };
+        }
+    }
+
+
+    // Apply bold style to table header row
+    const headerRowIndex = headerData.length;
+    const headerRow = tempTable.rows[headerRowIndex];
+    for (let c = 0; c < headerRow.cells.length; c++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: headerRowIndex, c: c });
+        if (!ws[cellAddress]) continue;
+        if (!ws[cellAddress].s) ws[cellAddress].s = {};
+        ws[cellAddress].s.font = { bold: true };
+    }
+
+    // Set column widths (optional: adjust `wch` to your needs)
+    ws['!cols'] = Array(table.rows[0].cells.length).fill({ wch: 20 });
+
+    // Create workbook and export
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'VIN Location Report');
+    XLSX.writeFile(wb, 'vin_location_report.xlsx');
+}
+
+
+    // Export to PDF function
+    function exportToPDF() {
+        var doc = new jspdf.jsPDF('p', 'mm', 'a4');
+
+        doc.setFontSize(16);
+        doc.text("VIN Location Status Report", 14, 18);
+
+        const headers = [
+            ["Status:", document.getElementById("status").value || "All"],
+            ["QC No:", document.getElementById("qc_no").value || "All"],
+            ["Date:", document.getElementById("date").value || "All"],
+            ["Month:", document.getElementById("month").value || "All"],
+            ["Year:", document.getElementById("year").value || "All"],
+            ["Client:", document.getElementById("platform").value || "All"],
+            ["Part:", document.getElementById("model_code").value || "All"],
+            ["Shift:", document.getElementById("shift_name").value || "All"],
+            ["Operator:", document.getElementById("operator").value || "All"],
+        ];
+
+        doc.setFontSize(10);
+        let yPos = 26;
+        headers.forEach(h => {
+            doc.text(`${h[0]} ${h[1]}`, 14, yPos);
+            yPos += 5;
+        });
+
+        doc.autoTable({
+            html: '#resultsTable',
+            startY: yPos + 2,
+            styles: { fontSize: 7, cellPadding: 1 },
+            headStyles: { fillColor: [100, 100, 100], fontStyle: 'bold' },
+            margin: { top: 30, left: 10, right: 10 },
+            pageBreak: 'auto'
+        });
+
+        doc.save('vin_location_report.pdf');
+    }
+</script>
+{% endblock %}

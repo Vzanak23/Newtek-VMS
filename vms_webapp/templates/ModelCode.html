@@ -1,0 +1,917 @@
+{% extends 'base.html' %}
+<title>{% block title %} Admin Page {% endblock %}</title>
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'node_modules/bootstrap/dist/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'node_modules/select2/dist/css/select2.min.css' %}">
+
+{% block extra_css %}
+<style>
+    body, h1, p, ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+    }
+
+    .form-group {
+        margin: 15px 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .ferrule-direction-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    .ferrule-direction-checkbox {
+        display: flex;
+        align-items: center;
+        margin-right: 15px;
+    }
+
+    .ferrule-direction-checkbox input[type="checkbox"] {
+        width: auto;
+        margin-right: 5px;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+        padding-top: 60px;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 2% auto;
+        padding: 30px;
+        border: 1px solid #888;
+        max-width: 600px;
+        max-height: 85vh;
+        overflow-y: auto;
+        border-radius: 8px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .action-buttons button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .action-buttons button.edit {
+        background-color: #062A63;
+        color: #fff;
+    }
+
+    .action-buttons button.edit:hover {
+        background-color: #2980b9;
+    }
+
+    .action-buttons button.delete {
+        background-color: #062A63;
+        color: #fff;
+    }
+
+    .action-buttons button.delete:hover {
+        background-color: #2980b9;
+    }
+
+    .select-platform {
+        margin: 1px;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .select-platform label {
+        font-weight: bold;
+        font-size: 20px;
+        margin-right: 10px;
+        color: #062A63;
+    }
+
+    .select-platform select {
+        width: auto;
+        min-width: 200px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-left: 10px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .data-table th,
+    .data-table td {
+        border: 1px solid #062A63;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .data-table th {
+        background-color: #062A63;
+        color: #ecf0f1;
+    }
+
+    .data-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .popup {
+        position: fixed;
+        top: 70%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #062A63;
+        padding: 15px;
+        border: 1px solid black;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 9999;
+        color: #fff;
+        font-size: 15px;
+        width: 200px;
+        text-align: center;
+    }
+
+    .error-message {
+        color: red;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+    }
+
+    #addButton {
+        padding: 10px 20px;
+        background-color: #062A63;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    #addButton:hover {
+        background-color: #2980b9;
+    }
+
+    .ferrule-dropdown-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 100px;
+    }
+
+    .ferrule-dropdown-wrapper label {
+        font-size: 12px;
+        font-weight: normal;
+        margin-bottom: 5px;
+        color: #062A63;
+    }
+
+    .ferrule-dropdown-wrapper select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .ferrule-dropdown-wrapper select:focus {
+        outline: none;
+        border-color: #062A63;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sameline" style="position: relative; background-color: white; padding: 10px;">
+    <div style="display: flex; align-items: center;">
+        <button id="addButton">+</button>
+    </div>
+
+    <div class="select-platform" style="
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+    ">
+        <label for="platformDropdown" style="margin-bottom: 4px;">Client</label>
+        <select id="platformDropdown" class="searchable-dropdown" onchange="fetchConnectedModels(this.value)"
+            style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc;">
+            <option value="">Select Client</option>
+            {% for platform in platforms %}
+            <option value="{{ platform.id }}" {% if platform.id|stringformat:"s" == request.GET.platform_id %}selected{% endif %}>{{ platform.platform }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="text-align: right; margin-right: 70px;" class="sectionSearch">
+        <form id="searchForm" method="get" action="{% url 'model' %}" style="display: inline-block; position: relative;">
+            <input type="hidden" name="platform_id" id="searchPlatformId" value="{{ request.GET.platform_id }}">
+            <input type="text" name="q" id="searchInput" placeholder="Search part..." value="{{ request.GET.q }}"
+                style="padding: 8px 30px 8px 8px; width: 250px; border: 1px solid #ccc; border-radius: 5px;">
+            <span id="clearSearch"
+                style="position: absolute; right: 100px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #aaa; font-weight: bold;">✖</span>
+            <button type="submit"
+                style="padding: 8px 15px; background-color: #062A63; color: #fff; border: none; border-radius: 5px;">Search</button>
+        </form>
+    </div>
+</div>
+
+<div id="platformError" style="color: red; font-size: 14px; margin-left: 20px;"></div>
+
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 class="h" style="text-align: center; color: #062A63;">Add Part</h2>
+        <form id="addForm" method="post" action="{% url 'model' %}">
+            {% csrf_token %}
+            <input type="hidden" name="record_id" value="{{ record_id }}">
+            <input type="hidden" name="platform_id" id="platformId" value="">
+            
+            <div class="form-group">
+                <label for="id_model_code">Part</label>
+                {{ form.model_code }}
+                <div id="modelCodeError" class="error-message"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="id_model_description">Part Name</label>
+                {{ form.model_description }}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_ratio">Ratio</label>
+                {{ form.ratio }}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_burden">Burden</label>
+                {{ form.burden }}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_label_type">Label Type</label>
+                {{ form.label_type }}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_no_of_ferrules">Number of Ferrules</label>
+                {{ form.no_of_ferrules }}
+            </div>
+
+            <div class="form-group">
+                <label>Ferrule Direction</label>
+                <div id="ferruleDirectionContainer" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <p style="color: #666; font-size: 14px;">Please select number of ferrules first</p>
+                </div>
+                <input type="hidden" name="ferrule_direction" id="ferruleDirectionValue">
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="edit">Save</button>
+                <button type="button" class="delete" id="cancelBtn">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if form.errors %}
+<div id="error-popup" class="popup">
+    <ul style="list-style: none; padding: 0;">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<table class="data-table">                             
+    <thead>
+        <tr>
+            <th>Sr. No.</th>
+            <th>Part No</th>
+            <th>Part Name</th>
+            <th>Ratio</th>
+            <th>Burden</th>
+            <th>Label Type</th>
+            <th>Ferrules</th>
+            <th>Ferrule Direction</th>
+            {% if user.is_superuser %}
+            <th>Edit</th>
+            <th>Delete</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody id="modelTableBody">
+        {% for key, item in data.items %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ item.model_code }}</td>
+            <td>{{ item.model_description }}</td>
+            <td>{{ item.ratio }}</td>
+            <td>{{ item.burden }}</td>
+            <td>{{ item.label_type }}</td>
+            <td>{{ item.no_of_ferrules }}</td>
+            <td>{{ item.ferrule_direction }}</td>
+            {% if user.is_superuser %}
+
+            <td>
+                <a href="#" onclick="event.preventDefault(); editModel({{ item.pk }});"
+                style="color:#062A63;font-size:20px;">Edit</a>
+            </td>
+            <td>
+                <a href="#" onclick="event.preventDefault(); deleteModel({{ item.pk }});"
+                style="color:red;font-size:20px;">Delete</a>
+            </td>
+            {%endif%}
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="10">No data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.6/sweetalert2.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0/js/select2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js"></script>
+
+{% if messages %}
+<script>
+    function displayFlashMessages() {
+        {% for message in messages %}
+        Swal.fire({
+            icon: "{{ message.tags }}",
+            text: "{{ message }}"
+        });
+        {% endfor %}
+    }
+    window.addEventListener('DOMContentLoaded', displayFlashMessages);
+</script>
+{% endif %}
+
+<script>
+    const addButton = document.getElementById('addButton');
+    const modal = document.getElementById('myModal');
+    const closeModal = document.querySelector('.close');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const platformDropdown = document.getElementById('platformDropdown');
+    const platformId = document.getElementById('platformId');
+    const searchPlatformId = document.getElementById('searchPlatformId');
+
+    // Ferrule direction options from backend
+    const ferruleDirectionOptions = [
+        {% for d in ferrule_directions %}
+            { value: "{{ d }}", label: "{{ d }}" },
+        {% endfor %}
+    ];
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: type,
+            title: message,
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    // Create ferrule dropdowns based on number selected
+    function createFerruleDropdowns(numberOfFerrules) {
+        const container = document.getElementById('ferruleDirectionContainer');
+        container.innerHTML = '';
+        
+        if (!numberOfFerrules || numberOfFerrules === '0' || numberOfFerrules === '') {
+            container.innerHTML = '<p style="color: #666; font-size: 14px;">Please select number of ferrules first</p>';
+            document.getElementById('ferruleDirectionValue').value = '';
+            return;
+        }
+        
+        const numFerrules = parseInt(numberOfFerrules);
+        
+        for (let i = 1; i <= numFerrules; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'ferrule-dropdown-wrapper';
+            
+            const label = document.createElement('label');
+            label.textContent = `Ferrule ${i}`;
+            
+            const select = document.createElement('select');
+            select.className = 'ferrule-direction-select';
+            select.setAttribute('data-ferrule-index', i);
+            select.required = true;
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select';
+            select.appendChild(defaultOption);
+            
+            ferruleDirectionOptions.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.value;
+                opt.textContent = option.label;
+                select.appendChild(opt);
+            });
+            
+            select.addEventListener('change', updateFerruleDirectionValue);
+            
+            wrapper.appendChild(label);
+            wrapper.appendChild(select);
+            container.appendChild(wrapper);
+        }
+    }
+
+    // Update the hidden input value with selected ferrule directions
+    function updateFerruleDirectionValue() {
+        const selects = document.querySelectorAll('.ferrule-direction-select');
+        const values = [];
+        
+        selects.forEach(select => {
+            if (select.value) {
+                values.push(select.value);
+            }
+        });
+        
+        const concatenatedValue = values.join(',');
+        document.getElementById('ferruleDirectionValue').value = concatenatedValue;
+    }
+
+    // Populate ferrule dropdowns when editing
+    function populateFerruleDropdownsForEdit(numberOfFerrules, ferruleDirectionString) {
+        createFerruleDropdowns(numberOfFerrules);
+
+        if (!ferruleDirectionString) return;
+
+        let directionsArray;
+        if (typeof ferruleDirectionString === 'string') {
+            directionsArray = ferruleDirectionString.split(',').map(d => d.trim()).filter(d => d !== '');
+        } else if (Array.isArray(ferruleDirectionString)) {
+            directionsArray = ferruleDirectionString;
+        } else {
+            return;
+        }
+
+        const selects = document.querySelectorAll('.ferrule-direction-select');
+        selects.forEach((select, index) => {
+            if (directionsArray[index]) {
+                select.value = directionsArray[index];
+            }
+        });
+
+        updateFerruleDirectionValue();
+    }
+    if (!window.location.search.includes("q=")) {
+    fetchConnectedModels(platformDropdown.value);
+}
+
+
+    // Fetch connected models based on platform
+    function fetchConnectedModels(platformId) {
+        // Update search form platform_id when platform changes
+        searchPlatformId.value = platformId;
+        
+        fetch(`/get_connected_models/?platform_id=${platformId}`)
+            .then(response => response.json())
+            .then(data => {
+                const modelTableBody = document.getElementById('modelTableBody');
+                modelTableBody.innerHTML = '';
+
+                if (data.length === 0) {
+                    modelTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center;">No data available.</td>
+                    </tr>`;
+                } else {
+                    data.forEach((model, index) => {
+                        const sanitizedRow = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${DOMPurify.sanitize(model.model_code)}</td>
+                            <td>${DOMPurify.sanitize(model.model_description)}</td>
+                            <td>${DOMPurify.sanitize(model.ratio)}</td>
+                            <td>${DOMPurify.sanitize(model.burden)}</td>
+                            <td>${DOMPurify.sanitize(model.label_type)}</td>
+                            <td>${model.no_of_ferrules}</td>
+                            <td>${DOMPurify.sanitize(model.ferrule_direction)}</td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="editModel(${model.pk})" 
+                                    style="background:none; border:none; color:#062A63; font-size:20px; cursor:pointer;">
+                                    Edit
+                                </button>
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deleteModel(${model.pk})" 
+                                    style="background:none; border:none; color:red; font-size:20px; cursor:pointer;">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>`;
+                        modelTableBody.insertAdjacentHTML('beforeend', sanitizedRow);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching models:', error);
+            });
+    }
+
+    // Edit model function
+    function editModel(pk) {
+        fetch(`/model_edit/${pk}/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('id_model_code').value = data.model_code;
+                    document.getElementById('id_model_description').value = data.model_description;
+                    document.getElementById('id_ratio').value = data.ratio;
+                    document.getElementById('id_burden').value = data.burden;
+                    document.getElementById('id_label_type').value = data.label_type;
+                    document.getElementById('id_no_of_ferrules').value = data.no_of_ferrules;
+                    document.getElementById('platformId').value = data.platform_id;
+
+                    populateFerruleDropdownsForEdit(data.no_of_ferrules, data.ferrule_direction);
+
+                    document.getElementById('modelCodeError').textContent = '';
+                    document.querySelector('.modal-content h2.h').textContent = 'Edit Part';
+                    document.getElementById('addForm').action = `/model_edit/${pk}/`;
+                    document.querySelector('input[name="record_id"]').value = pk;
+                    modal.style.display = 'block';
+                } else {
+                    showToast('Failed to load part data', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching model data:', error);
+                showToast('Failed to load part data', 'error');
+            });
+    }
+
+    // Delete model function
+    function deleteModel(pk) {
+        Swal.fire({
+            title: 'Delete this part?',
+            text: 'This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/model_delete/${pk}/`, {
+                    method: 'POST',
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest', 
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        fetchConnectedModels(platformDropdown.value);
+                        showToast(data.message || 'Part deleted successfully!', 'success');
+                    } else {
+                        showToast(data.error || 'Failed to delete part', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Failed to delete part', 'error');
+                });
+            }
+        });
+    }
+
+    // Submit model form
+    function submitModelForm(event) {
+        event.preventDefault();
+        const form = document.getElementById('addForm');
+        const saveButton = form.querySelector('button.edit');
+        saveButton.disabled = true;
+        const errorDiv = document.getElementById('modelCodeError');
+        
+        const formData = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchConnectedModels(platformDropdown.value);
+                    modal.style.display = 'none';
+                    errorDiv.textContent = '';
+                    showToast(data.message);
+                } else {
+                    if (data.error) {
+                        errorDiv.textContent = data.error;
+                    }
+                }
+                saveButton.disabled = false;
+            })
+            .catch(() => {
+                errorDiv.textContent = 'Network error!';
+                saveButton.disabled = false;
+            });
+    }
+
+    // Modal controls
+    closeModal.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    addButton.addEventListener('click', () => {
+        const platformError = document.getElementById('platformError');
+        if (platformDropdown.value === "") {
+            alert('Please select a platform first.');
+            return;
+        }
+        platformError.textContent = "";
+        platformId.value = platformDropdown.value;
+        
+        // Clear all form fields
+        document.getElementById('id_model_code').value = '';
+        document.getElementById('id_model_description').value = '';
+        document.getElementById('id_ratio').selectedIndex = 0;
+        document.getElementById('id_burden').selectedIndex = 0;
+        document.getElementById('id_label_type').selectedIndex = 0;
+        document.getElementById('id_no_of_ferrules').selectedIndex = 0;
+        
+        // Reset ferrule direction container
+        const container = document.getElementById('ferruleDirectionContainer');
+        container.innerHTML = '<p style="color: #666; font-size: 14px;">Please select number of ferrules first</p>';
+        document.getElementById('ferruleDirectionValue').value = '';
+        
+        document.getElementById('modelCodeError').textContent = '';
+        document.querySelector('.modal-content h2.h').textContent = 'Add Part';
+        document.getElementById('addForm').action = "{% url 'model' %}";
+        document.querySelector('input[name="record_id"]').value = '';
+        document.getElementById('addForm').querySelector('button.edit').disabled = false;
+        modal.style.display = 'block';
+    });
+
+    cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.style.display = 'none';
+        document.getElementById('modelCodeError').textContent = '';
+    });
+
+    // Platform dropdown change handler
+    platformDropdown.addEventListener("change", function () {
+        sessionStorage.setItem('selectedPlatformId', this.value);
+        platformId.value = this.value;
+        searchPlatformId.value = this.value;
+    });
+
+    // AJAX search without page reload
+    function performSearch(query, platformId) {
+        fetch(`/model?platform_id=${encodeURIComponent(platformId)}&q=${encodeURIComponent(query)}&ajax=1`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.querySelector('#modelTableBody');
+            if (newTableBody) {
+                document.getElementById('modelTableBody').innerHTML = newTableBody.innerHTML;
+            }
+        })
+        .catch(err => console.error('Search failed:', err));
+    }
+
+    // Clear search functionality via AJAX
+    document.getElementById("clearSearch").addEventListener("click", function (e) {
+        e.preventDefault();
+        document.getElementById("searchInput").value = "";
+        performSearch("", platformDropdown.value);
+    });
+
+    // Search form submit via AJAX
+    document.getElementById("searchForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const query = document.getElementById("searchInput").value;
+        const platformId = platformDropdown.value;
+        performSearch(query, platformId);
+    });
+
+    // Initialize from session storage and clear search on page load
+    const selectedPlatformId = DOMPurify.sanitize(sessionStorage.getItem('selectedPlatformId'));
+    if (selectedPlatformId) {
+        platformDropdown.value = selectedPlatformId;
+        searchPlatformId.value = selectedPlatformId;
+        // Clear search input on page load
+        document.getElementById("searchInput").value = "";
+        fetchConnectedModels(selectedPlatformId);
+    } else {
+        // Also clear search on load even if no session stored
+        document.getElementById("searchInput").value = "";
+    }
+
+    // Error popup auto-hide
+    document.addEventListener("DOMContentLoaded", function () {
+        var errorPopup = document.getElementById('error-popup');
+        if (errorPopup) {
+            setTimeout(function () {
+                errorPopup.style.display = 'none';
+            }, 1500);
+        }
+
+        // Number of ferrules change handler
+        const noOfFerrulesSelect = document.getElementById('id_no_of_ferrules');
+        if (noOfFerrulesSelect) {
+            // 'input' event fires immediately when value changes
+            noOfFerrulesSelect.addEventListener('input', function() {
+                createFerruleDropdowns(this.value);
+            });
+            
+            // 'change' event as backup
+            noOfFerrulesSelect.addEventListener('change', function() {
+                createFerruleDropdowns(this.value);
+            });
+            
+            // 'click' event for immediate response on selection
+            noOfFerrulesSelect.addEventListener('click', function() {
+                setTimeout(() => {
+                    createFerruleDropdowns(this.value);
+                }, 50);
+            });
+        }
+
+        // Form validation
+        const addFormElement = document.getElementById('addForm');
+        if (addFormElement) {
+            addFormElement.addEventListener('submit', function(e) {
+                const numFerrules = document.getElementById('id_no_of_ferrules').value;
+                const ferruleDirectionValue = document.getElementById('ferruleDirectionValue').value;
+                
+                if (numFerrules && numFerrules !== '0') {
+                    const selectedDirections = ferruleDirectionValue ? ferruleDirectionValue.split(',').filter(d => d.trim() !== '') : [];
+                    
+                    if (selectedDirections.length !== parseInt(numFerrules)) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            text: 'Please select ferrule direction for all ferrules'
+                        });
+                        return false;
+                    }
+                }
+            });
+        }
+    });
+
+    // Attach form submit handler
+    const addForm = document.getElementById('addForm');
+    if (addForm) {
+        addForm.addEventListener('submit', submitModelForm);
+    }
+
+    // Make functions globally accessible
+    window.editModel = editModel;
+    window.deleteModel = deleteModel;
+    window.fetchConnectedModels = fetchConnectedModels;
+</script>
+
+<script>
+    $(document).ready(function () {
+    if (typeof $.fn.select2 !== 'undefined') {
+        $(".searchable-dropdown").each(function () {
+            let select = $(this);
+            let options = select.find("option");
+
+            options.sort(function (a, b) {
+                return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+            });
+
+            select.empty().append(options);
+
+            const selectedPlatformId = sessionStorage.getItem('selectedPlatformId');
+            if (selectedPlatformId && select.find(`option[value='${selectedPlatformId}']`).length) {
+                select.val(selectedPlatformId).trigger('change');
+            } else {
+                const firstOption = select.find('option').not('[value=""]').first();
+                if (firstOption.length) {
+                    const firstVal = firstOption.val();
+                    select.val(firstVal).trigger('change');
+                    sessionStorage.setItem('selectedPlatformId', firstVal);
+                } else {
+                    select.val("").trigger('change');
+                }
+            }
+        });
+
+        $('.searchable-dropdown').select2({
+            placeholder: "Select Platform",
+            allowClear: true,
+            width: 'resolve'
+        });
+        
+        // Initialize Select2 for ferrules if it's a searchable dropdown
+        if ($('#id_no_of_ferrules').hasClass('searchable-dropdown')) {
+            $('#id_no_of_ferrules').select2({
+                placeholder: "Select Number",
+                allowClear: true,
+                width: 'resolve'
+            });
+        }
+        
+        // Handle immediate updates for ferrules dropdown
+        $('#id_no_of_ferrules').on('select2:select', function(e) {
+            createFerruleDropdowns(this.value);
+        });
+        
+        $('#id_no_of_ferrules').on('select2:clear', function(e) {
+            createFerruleDropdowns('');
+        });
+        
+        $('#id_no_of_ferrules').on('change', function() {
+            createFerruleDropdowns(this.value);
+        });
+    }
+});
+</script>
+
+{% endblock %}

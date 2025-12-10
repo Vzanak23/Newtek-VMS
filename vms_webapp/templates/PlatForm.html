@@ -1,0 +1,745 @@
+{% extends 'base.html' %} {% load static %}
+<title>{% block title %} Admin Page {% endblock %}</title>
+
+{% block extra_css %}
+<style>
+  /* Reset some default styles */
+  body,
+  h1,
+  p,
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .form-group {
+    margin: 10px 0;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: bold;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-top: 60px;
+  }
+
+  .modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    max-width: 400px;
+  }
+
+  .modal-content img {
+    width: 350px;
+    height: 65px;
+  }
+
+  .action-buttons {
+    display: flex;
+  }
+
+  .action-buttons button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .action-buttons button.edit {
+    background-color: #062a63;
+    color: #fff;
+  }
+
+  .action-buttons button.edit:hover {
+    background-color: #2980b9;
+  }
+
+  .action-buttons button.delete {
+    background-color: #062a63;
+    color: #fff;
+  }
+
+  .action-buttons button.delete:hover {
+    background-color: #2980b9;
+  }
+
+  #form-div {
+    display: none;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  #form-div h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+  }
+
+  .h {
+    justify-content: center;
+    margin-left: 70px;
+  }
+
+  .report-table th,
+  .report-table td {
+    border: 1px solid #062a63;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .report-table th {
+    background-color: #062a63;
+    color: #ecf0f1;
+  }
+
+  th,
+  td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+  }
+
+  th {
+    color: #f2f2f2;
+    background-color: #062a63;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .no-results {
+    font-style: italic;
+    color: #888;
+  }
+
+  /* Popup message styles */
+  .popup {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f44336;
+    color: white;
+    text-align: center;
+    border-radius: 20px;
+    padding: 16px;
+    z-index: 999;
+    display: none;
+    /* Initially hidden */
+  }
+
+  .show {
+    display: block;
+    /* Show the popup when needed */
+  }
+</style>
+{% endblock %} {% block content %}
+
+<div class="sameline">
+  <div>
+    <!-- {% if perms.vms_webapp.add_platform %} -->
+    <button id="addButton">+</button>
+    <!-- {% endif %} -->
+  </div>
+  <div style="text-align: right; margin-right: 70px" class="sectionSearch">
+    <form id="searchForm" style="display: inline-block; position: relative">
+      <input
+        type="text"
+        name="q"
+        id="searchInput"
+        placeholder="Search client..."
+        value="{{ request.GET.q }}"
+        style="
+          padding: 8px 30px 8px 8px;
+          width: 250px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+        "
+      />
+      <span
+        id="clearSearch"
+        style="
+          position: absolute;
+          right: 100px;
+          top: 50%;
+          transform: translateY(-50%);
+          cursor: pointer;
+          color: #aaa;
+          font-weight: bold;
+        "
+        >✖</span
+      >
+      <button
+        type="submit"
+        style="
+          padding: 8px 15px;
+          background-color: #062a63;
+          color: #fff;
+          border: none;
+          border-radius: 5px;
+        "
+      >
+        Search
+      </button>
+    </form>
+  </div>
+</div>
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2 class="h">Add Client</h2>
+    <form id="addForm" method="post" class="form-group">
+      {% csrf_token %}
+      <input type="hidden" name="record_id" value="" />
+
+      <div class="form-group">
+        <label for="Employee_Name">Client Name</label>
+        {{ form.platform }} {% if form.errors.platform %}
+        <p style="color: red; margin-top: 5px">{{ form.errors.platform.0 }}</p>
+        {% endif %}
+      </div>
+
+      {% comment %} <div class="form-group ">
+        <label for="model_code_length">Part Length</label>
+        {{ form.model_code_length }} {% if form.errors.model_code_length %}
+        <p style="color: red; margin-top: 5px">
+          {{ form.errors.model_code_length.0 }}
+        </p>
+        {% endif %}
+      </div> {% endcomment %}
+
+      <div class="action-buttons">
+        <button type="submit" class="edit">Save</button>
+        <button type="button" class="delete">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Sr. No.</th>
+      <th>Client Name</th>
+      {% comment %} <th>Part Length</th> {% endcomment %}
+      {% if user.is_superuser %}
+      <th>Edit</th>
+      <th>Delete</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for index, item in data.items %}
+    <tr id="row-{{ item.pk }}">
+      <td>{{ forloop.counter }}</td>
+      <td>{{ item.platform }}</td>
+      {% comment %} <td>{{ item.model_code_length }}</td> {% endcomment %}
+      <!-- {% if perms.vms_webapp.edit_platform %} -->
+      <td>
+        <a
+          href="#"
+          class="edit-button action-buttons"
+          data-id="{{ item.pk }}"
+          style="color: #062a63; font-size: 20px"
+          >Edit</a
+        >
+      </td>
+      <!-- {% else %} -->
+
+      <!-- {% endif %} -->
+
+      <!-- {% if perms.vms_webapp.delete_platform %} -->
+      <td>
+        <a
+          href="#"
+          class="action-buttons delete-button"
+          data-id="{{ item.pk }}"
+          data-url="{% url 'PlatForm_delete' item.pk %}"
+          style="color: red; font-size: 20px"
+        >
+          Delete
+        </a>
+      </td>
+      <!-- {% else %} -->
+
+      <!-- {% endif %} -->
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="4">No data available.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %} {% block extra_js %} {% if messages %}
+<script>
+  // AJAX search for platforms
+  document.addEventListener('DOMContentLoaded', function () {
+      const searchForm = document.getElementById('searchForm');
+      const searchInput = document.getElementById('searchInput');
+      searchForm.addEventListener('submit', function (e) {
+          e.preventDefault();
+          const query = searchInput.value;
+          let url = '{% url "PlatForm" %}?ajax=1';
+          if (query) {
+              url += `&q=${encodeURIComponent(query)}`;
+          }
+          fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+              .then(response => response.text())
+              .then(html => {
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, 'text/html');
+                  const newTable = doc.querySelector('.data-table');
+                  if (newTable) {
+                      document.querySelector('.data-table').innerHTML = newTable.innerHTML;
+                  }
+              });
+      });
+  });
+
+      // Function to display flash messages using SweetAlert
+      function displayFlashMessages() {
+          {% for message in messages %}
+          Swal.fire({
+              icon: "{{ message.tags }}",
+              text: "{{ message }}"
+          });
+          {% endfor %}
+      }
+
+      // Call the function to display flash messages after the page has loaded
+      window.addEventListener('DOMContentLoaded', function () {
+          displayFlashMessages();
+      });
+</script>
+{% endif %}
+
+<script>
+  const addButton = document.getElementById("addButton");
+  const modal = document.getElementById("myModal");
+  const closeModal = document.querySelector(".close");
+  const cancelBtn = document.querySelector(".delete");
+  const form = document.getElementById("addForm");
+  const platformInput = form.querySelector("input[name='platform']");
+  const recordIdInput = form.querySelector("input[name='record_id']");
+  // model_code_length input lives in the same form; keep a ref so AJAX edit can populate it
+  const modelCodeLengthInput = form.querySelector("input[name='model_code_length']");
+
+  function clearPlatformModal() {
+    // Remove error
+    const errorElem = form.querySelector(".platform-error");
+    if (errorElem) errorElem.remove();
+    // Reset input
+    platformInput.value = "";
+    recordIdInput.value = "";
+    if (modelCodeLengthInput) {
+      // clear Part length so add-modal doesn't show stale/default value
+      modelCodeLengthInput.value = "";
+    }
+  }
+
+  addButton.addEventListener("click", () => {
+    clearPlatformModal();
+    modal.style.display = "block";
+  });
+
+  closeModal.addEventListener("click", () => {
+    modal.style.display = "none";
+    clearPlatformModal();
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+    clearPlatformModal();
+  });
+
+  const editPlatopen = "{{ edit_Plat_open }}";
+
+  if (editPlatopen) {
+    modal.style.display = "block";
+  }
+
+  // Function to handle clicks outside the modal
+  // window.addEventListener('click', function (event) {
+  //     if (event.target === modal) {
+  //         modal.style.display = 'none';
+  //         // window.location.href = "{% url 'PlatForm' %}";
+  //     }
+  // });
+  cancelBtn.addEventListener("click", () => {
+    // Redirect back to the original page
+    // window.location.href = "{% url 'PlatForm' %}";
+  });
+
+  // Wait for the DOM content to load
+  document.addEventListener("DOMContentLoaded", function () {
+    // Get all delete links with "PlatForm_delete" in the href
+    const deleteLinks = document.querySelectorAll("a[href*='PlatForm_delete']");
+
+    deleteLinks.forEach((link) => {
+      link.addEventListener("click", function (event) {
+        event.preventDefault(); // Prevent the default action (navigation)
+
+        const url = this.href; // Store the link's href (delete URL)
+
+        // Show confirmation popup using SweetAlert
+        Swal.fire({
+          title: "Are you sure?",
+          text: "This action cannot be undone!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33",
+          cancelButtonColor: "#3085d6",
+          confirmButtonText: "Yes, delete it!",
+          cancelButtonText: "Cancel",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // If confirmed, redirect to the delete URL
+            fetch(url, {
+              method: "POST",
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": getCookie("csrftoken"),
+              },
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.success) {
+                  Swal.fire("Deleted!", data.message, "success").then(() => {
+                    // window.location.reload();  // or dynamically remove the row
+                  });
+                } else {
+                  Swal.fire("Error", data.error || "Failed to delete", "error");
+                }
+              });
+          }
+        });
+      });
+    });
+  });
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      document.cookie.split(";").forEach((cookie) => {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        }
+      });
+    }
+    return cookieValue;
+  }
+</script>
+
+<script src="{% static 'node_modules/sweetalert2/dist/sweetalert2.all.min.js' %}"></script>
+<!-- CSRF helper -->
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
+
+<!-- SweetAlert Toast -->
+<script>
+  function showToast(message, type = "success") {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: type,
+      title: message,
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+    });
+  }
+</script>
+
+<!-- Shared handlers -->
+<script>
+  function updateSerialNumbers() {
+    const tableBody = document.querySelector("table.data-table tbody");
+    const allRows = tableBody.querySelectorAll("tr");
+    allRows.forEach((row, index) => {
+      // The first cell (index 0) is the "Sr. No." column.
+      // We update its content to the new correct number (index + 1).
+      row.cells[0].textContent = index + 1;
+    });
+  }
+
+  function handleDelete(e) {
+    e.preventDefault();
+    const deleteUrl = this.getAttribute("data-url");
+    const recordId = this.getAttribute("data-id");
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(deleteUrl, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              const row = document.getElementById(`row-${recordId}`);
+              if (row) {
+                row.remove();
+                updateSerialNumbers(); // <-- ADD LINE
+              }
+              showToast(data.message || "Deleted successfully", "success");
+            } else {
+              showToast(data.error || "Could not delete", "error");
+            }
+          })
+          .catch(() => showToast("Unexpected error occurred", "error"));
+      }
+    });
+  }
+
+  function handleEdit(e) {
+    e.preventDefault();
+    const recId = this.getAttribute("data-id");
+
+    fetch(`/PlatForm_edit/${recId}/`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          clearPlatformModal();
+          platformInput.value = data.platform;
+          recordIdInput.value = recId;
+          modal.style.display = "block";
+        } else {
+          showToast("Failed to load platform", "error");
+        }
+      })
+      .catch(() => showToast("Unexpected error loading data", "error"));
+  }
+</script>
+
+<!-- Button Bindings -->
+<script>
+  function bindEditAndDeleteButtons() {
+    document.querySelectorAll(".edit-button").forEach((button) => {
+      button.removeEventListener("click", handleEdit);
+      button.addEventListener("click", handleEdit);
+    });
+
+    document.querySelectorAll(".delete-button").forEach((button) => {
+      button.removeEventListener("click", handleDelete);
+      button.addEventListener("click", handleDelete);
+    });
+  }
+</script>
+
+<!-- Form Submission -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    bindEditAndDeleteButtons();
+
+    const form = document.getElementById("addForm");
+    const modal = document.getElementById("myModal");
+    const platformInput = form.querySelector("input[name='platform']");
+    const recordIdInput = form.querySelector("input[name='record_id']");
+    const tableBody = document.querySelector("table.data-table tbody");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const recordId = recordIdInput.value.trim();
+      const isEdit = recordId !== "";
+      const url = isEdit
+        ? `/PlatForm_edit/${recordId}/`
+        : "{% url 'PlatForm' %}";
+
+      // Remove previous error
+      const errorElem = form.querySelector(".platform-error");
+      if (errorElem) errorElem.remove();
+
+      fetch(url, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            const deleteUrl = `{% url 'PlatForm_delete' 0 %}`.replace(
+              "0",
+              data.id || recordId
+            );
+            const rowHTML = `
+                    <td>${
+                      isEdit
+                        ? document.getElementById("row-" + recordId).rowIndex
+                        : tableBody.rows.length + 1
+                    }</td>
+                    <td>${data.new_platform || data.platform}</td>
+                    <td><a href="#" class="edit-button action-buttons" data-id="${
+                      data.id || recordId
+                    }" style="color: #062A63; font-size: 20px;">Edit</a></td>
+                    <td><a href="#" class="delete-button action-buttons" data-id="${
+                      data.id || recordId
+                    }" data-url="${deleteUrl}" style="color: red; font-size: 20px;">Delete</a></td>
+                `;
+
+            if (isEdit) {
+              const existingRow = document.getElementById("row-" + recordId);
+              if (existingRow) {
+                existingRow.innerHTML = rowHTML;
+              }
+            } else {
+              const newRow = document.createElement("tr");
+              newRow.id = "row-" + data.id;
+              newRow.innerHTML = rowHTML;
+              tableBody.appendChild(newRow);
+            }
+
+            showToast(
+              isEdit ? "Updated successfully!" : "Added successfully!",
+              "success"
+            );
+
+            modal.style.display = "none";
+            form.reset();
+            recordIdInput.value = "";
+            bindEditAndDeleteButtons();
+          } else {
+            // Show error above input field, not as popup
+            const platformField = form.querySelector("input[name='platform']");
+            if (platformField) {
+              const errorDiv = document.createElement("p");
+              errorDiv.className = "platform-error";
+              errorDiv.style.color = "red";
+              errorDiv.style.marginTop = "5px";
+              errorDiv.textContent = data.error || "Something went wrong.";
+              platformField.parentNode.appendChild(errorDiv);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          // Optionally show a generic error above the input
+          const platformField = form.querySelector("input[name='platform']");
+          if (platformField) {
+            const errorDiv = document.createElement("p");
+            errorDiv.className = "platform-error";
+            errorDiv.style.color = "red";
+            errorDiv.style.marginTop = "5px";
+            errorDiv.textContent = "Please try again.";
+            platformField.parentNode.appendChild(errorDiv);
+          }
+        });
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("searchInput");
+    const clearBtn = document.getElementById("clearSearch");
+
+    clearBtn.addEventListener("click", function (e) {
+      input.value = "";
+      input.focus();
+
+      e.preventDefault();
+      const query = searchInput.value;
+      let url = '{% url "PlatForm" %}?ajax=1';
+      if (query) {
+        url += `&q=${encodeURIComponent(query)}`;
+      }
+      fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then((response) => response.text())
+        .then((html) => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+          const newTable = doc.querySelector(".data-table");
+          if (newTable) {
+            document.querySelector(".data-table").innerHTML =
+              newTable.innerHTML;
+          }
+        });
+    });
+  });
+</script>
+<script>
+// ===================== SEARCH + CLEAR BUTTON FIX =====================
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("searchInput");
+    const clearBtn = document.getElementById("clearSearch");
+
+    clearBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        input.value = "";
+
+        // Reload without search query
+        window.location.href = "{% url 'PlatForm' %}";
+    });
+});
+</script>
+<!-- Correct script order: jQuery, Bootstrap, Select2, Chart.js, Chart.js plugin, SweetAlert2 -->
+<script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
+<script src="{% static 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'node_modules/select2/dist/js/select2.min.js' %}"></script>
+<script src="{% static 'node_modules/chart.js/dist/chart.umd.js' %}"></script>
+<script src="{% static 'node_modules/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js' %}"></script>
+<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+{% endblock %}

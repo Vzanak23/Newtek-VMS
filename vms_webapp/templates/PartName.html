@@ -1,0 +1,1990 @@
+<!-- AJAX Search Refactor -->
+{% extends 'base.html' %}
+<title>{% block title %} Admin Page {% endblock %}</title>
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Reset some default styles */
+    body,
+    h1,
+    p,
+    ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .form-group {
+        margin: 10px 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-family: inherit;
+        font-size: inherit;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .form-group small {
+        color: #666;
+        font-size: 12px;
+        margin-top: 3px;
+        display: block;
+    }
+
+    .modal {
+        display: none;
+        align-items: flex-start;
+        /* Align to top instead of center for better height handling */
+        justify-content: center;
+        /* Center items horizontally */
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto; /* Allow scrolling if content is very tall */
+        background-color: rgba(0, 0, 0, 0.4);
+        padding: 20px 0; /* Add padding top and bottom */
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        padding: 20px;
+        border: 1px solid #888;
+        max-width: 450px;
+        min-height: auto;
+        max-height: calc(100vh - 40px); /* Prevent modal from exceeding viewport */
+        overflow-y: auto; /* Add scroll if content is very long */
+        margin: 0 auto; /* Center horizontally */
+        border-radius: 8px;
+    }
+
+    .modal-content img {
+        width: 350px;
+        height: 65px;
+
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+    }
+
+
+
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        /* Align buttons to the sides */
+    }
+
+    .action-buttons button.delete {
+        background-color: #062A63;
+        /* Change button color if needed */
+        color: #fff;
+        margin-left: auto;
+        /* Move the cancel button to the right */
+    }
+
+
+    .action-buttons button.edit {
+        background-color: #062A63;
+        color: #fff;
+    }
+
+    .action-buttons button.edit:hover {
+        background-color: #2980b9;
+    }
+
+    .action-buttons button.delete {
+        background-color: #062A63;
+        color: #fff;
+    }
+
+    .action-buttons button.delete:hover {
+        background-color: #2980b9;
+    }
+
+    #form-div {
+        display: none;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #form-div h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+    }
+
+    .h {
+
+        justify-content: center;
+        margin-left: 70px;
+    }
+
+    .h::before {
+        content: "";
+        /* Add empty content */
+        position: absolute;
+        /* Position relative to the .h element */
+        margin-top: 15%;
+        /* Place the line vertically in the middle of the .h element */
+        left: 0;
+        /* Adjust left position as needed */
+        width: 100%;
+        /* Set line width to cover the entire .h element */
+        height: 1px;
+        /* Set line height */
+        background-color: black;
+    }
+
+    .report-table th,
+    .report-table td {
+        border: 1px solid #062A63;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .report-table th {
+        background-color: #062A63;
+        color: #ecf0f1;
+    }
+
+    th,
+    td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        color: #f2f2f2;
+        background-color: #062A63;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .no-results {
+        font-style: italic;
+        color: #888;
+    }
+
+    .select-wrapper {
+        margin-bottom: 20px;
+    }
+
+    .select-wrapper label {
+        font-weight: bold;
+        margin-right: 5px;
+        display: inline-block;
+    }
+
+    .select-wrapper select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        display: block;
+    }
+
+    /* Optional: Style select dropdown options */
+    .select-wrapper select option {
+        padding: 5px;
+    }
+
+    #modalImage {
+        width: 80%;
+        /* Adjust as needed */
+        height: 80%;
+        /* Adjust as needed */
+    }
+
+    /* Popup message styles */
+    .popup {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #f44336;
+        color: white;
+        text-align: center;
+        border-radius: 20px;
+        padding: 16px;
+        z-index: 999;
+        display: none;
+        /* Initially hidden */
+    }
+
+    .show {
+        display: block;
+        /* Show the popup when needed */
+    }
+
+    .addparts {
+        display: flex;
+        flex-direction: row;
+        justify-content: end;
+
+    }
+
+
+
+    .select-platform {
+        position: relative;
+        display: inline-block;
+        width: 250px;
+    }
+
+    .dropdown-label {
+        display: block;
+        padding: 8px;
+        background-color: #f8f9fa;
+        border: 1px solid #ccc;
+        cursor: pointer;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 5px;
+        z-index: 1000;
+    }
+
+    .dropdown-content label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 3px 5px;
+    }
+
+    /* Dropdown container */
+    .select-platform {
+        position: relative;
+        display: inline-block;
+    }
+
+    /* The dropdown menu (hidden by default) */
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background: white;
+        min-width: 200px;
+        border: 1px solid #ccc;
+        padding: 8px;
+        z-index: 999;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Show dropdown when toggled via JavaScript */
+    .dropdown-content.show {
+        display: block;
+    }
+
+    /* Optional: style labels inside */
+    .dropdown-content label {
+        display: block;
+        padding: 4px;
+        cursor: pointer;
+    }
+
+    /* Hover effect for items */
+    .dropdown-content label:hover {
+        background-color: #f0f0f0;
+    }
+
+    /* Dropdown container */
+    .select-platform {
+        position: relative;
+        display: inline-block;
+    }
+
+    /* The dropdown menu (hidden by default) */
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background: white;
+        min-width: 200px;
+        border: 1px solid #ccc;
+        padding: 8px;
+        z-index: 999;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Style labels so text is left, checkbox right */
+    .dropdown-content label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px;
+        cursor: pointer;
+    }
+
+    /* Hover effect */
+    .dropdown-content label:hover {
+        background-color: #f0f0f0;
+    }
+
+    @media (max-width: 768px) {
+        .sameline {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .select-platform {
+            width: 100%;
+        }
+
+        .select-platform select {
+            width: 100%;
+        }
+
+        .sameline form input {
+            width: 100% !important;
+        }
+    }
+
+    /* Fix for modal dropdown positioning */
+    #updateImageModal .dropdown-content {
+        position: static; /* Change from absolute to static so it affects document flow */
+        display: none; /* Initially hidden */
+        background: white;
+        border: 1px solid #ccc;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 5px;
+        border-radius: 4px;
+    }
+
+    #updateImageModal .dropdown-content.show {
+        display: block; /* Show when toggled */
+    }
+
+    #updateImageModal .select-platform {
+        position: relative;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    /* Ensure Part and description stay on same line */
+    #updateImageModal .dropdown-content label {
+        display: flex;
+        align-items: center;
+        margin: 5px 0;
+        padding: 8px 5px;
+        white-space: nowrap; /* Prevent text wrapping */
+        overflow: hidden;
+        text-overflow: ellipsis; /* Add ellipsis for very long text */
+    }
+
+    #updateImageModal .dropdown-content label input[type="checkbox"] {
+        margin-right: 10px;
+        flex-shrink: 0; /* Prevent checkbox from shrinking */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sameline"
+    style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; background: white;">
+
+    <!-- Left side: Add button -->
+    <div style="display: flex; align-items: center;">
+        {% if perms.vms_webapp.add_part_tbl %}
+        <button id="addButton">+</button>
+        {% endif %}
+    </div>
+
+    <div class="select-platform form-group" style="
+        position: absolute;
+        left: 30%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+    ">
+        <label for="platformDropdown" style="margin-bottom: 4px; margin-right: 10px;">Client</label>
+        <!-- onchange="filterPartsByPlatform(this.value)" -->
+        <select id="platformDropdown" class="searchable-dropdown"
+            style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc;">
+            <option value="">Select Client</option>
+            {% for platform in platforms|dictsort:"platform" %}
+            <option value="{{ platform.id }}" {% if request.GET.platform_id == platform.id|stringformat:"s" %}selected{% endif %}>{{ platform.platform }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <script>
+// SINGLE UNIFIED PLATFORM DROPDOWN SCRIPT
+$(document).ready(function() {
+    console.log('[Client Init] Starting platform dropdown initialization...');
+    
+    // Get URL parameters FIRST
+    const urlParams = new URLSearchParams(window.location.search);
+    let platformId = urlParams.get('platform_id');
+    console.log('[Platform Init] Client ID from URL:', platformId);
+    
+    // Sort platform options alphabetically
+    const $select = $('#platformDropdown');
+    const options = $select.find('option').toArray();
+    const placeholderOpt = options.find(o => o.value === "");
+    const otherOpts = options.filter(o => o.value !== "");
+    otherOpts.sort((a, b) => a.text.toLowerCase().localeCompare(b.text.toLowerCase()));
+    $select.empty();
+    if (placeholderOpt) $select.append(placeholderOpt);
+    otherOpts.forEach(o => $select.append(o));
+    console.log('[Client Init] Sorted', otherOpts.length, 'platforms alphabetically');
+
+    // Initialize Select2 FIRST
+    $('#platformDropdown').select2({
+        placeholder: "Select a client",
+        allowClear: true,
+        width: '100%'
+    });
+    console.log('[client Init] Select2 initialized');
+
+    // Auto-select first platform if none in URL and RELOAD to fetch data (ONCE ONLY)
+    if (!platformId && otherOpts.length > 0) {
+        // Check if we've already tried to auto-select (prevent infinite loop)
+        const autoSelectAttempted = sessionStorage.getItem('platform_auto_select_attempted');
+        console.log('[client Init] Auto-select attempted flag:', autoSelectAttempted);
+        
+        if (!autoSelectAttempted) {
+            // Mark that we're attempting auto-select
+            sessionStorage.setItem('platform_auto_select_attempted', 'true');
+            
+            platformId = otherOpts[0].value;
+            console.log('[Platform Init] Auto-selecting first platform:', platformId);
+            
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('platform_id', platformId);
+            
+            console.log('[Platform Init] Reloading to:', currentUrl.toString());
+            // Reload page immediately with the auto-selected platform
+            window.location.href = currentUrl.toString();
+            return; // Stop execution since we're reloading
+        } else {
+            console.log('[Platform Init] Already attempted auto-select, clearing flag');
+            // Clear the flag for next session
+            sessionStorage.removeItem('platform_auto_select_attempted');
+        }
+    } else {
+        console.log('[Platform Init] Platform ID exists, clearing flag');
+        // Clear the flag since we have a platform_id in URL
+        sessionStorage.removeItem('platform_auto_select_attempted');
+    }
+    
+    // Set dropdown value (only visual update when platform_id exists in URL)
+    if (platformId) {
+        $select.val(platformId).trigger('change.select2');
+        console.log('[Platform Init] Set dropdown to platform:', platformId);
+        
+        // Update hidden form field
+        const hiddenField = document.getElementById('platform_id_for_form');
+        if (hiddenField) {
+            hiddenField.value = platformId;
+            console.log('[Platform Init] Updated hidden field');
+        }
+    }
+
+    // Single change event handler (using Select2 events to avoid duplicate triggers)
+    $('#platformDropdown').on('select2:select select2:clear', function(e) {
+        const newPlatformId = $(this).val();
+        console.log('[Platform Change] User selected platform:', newPlatformId);
+        
+        const currentUrl = new URL(window.location.href);
+        
+        if (newPlatformId) {
+            currentUrl.searchParams.set('platform_id', newPlatformId);
+        } else {
+            currentUrl.searchParams.delete('platform_id');
+        }
+        
+        console.log('[Platform Change] Reloading to:', currentUrl.toString());
+        // Reload page with new platform
+        window.location.href = currentUrl.toString();
+    });
+    
+    console.log('[Platform Init] Initialization complete');
+});
+</script> 
+
+    <!-- Right side: Search + Custom Part -->
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <form id="searchForm" style="display: flex; align-items: center; gap: 8px; position: relative;">
+            <input type="text" name="q" id="searchInput" placeholder="Search partname..." value="{{ request.GET.q }}"
+                style="padding: 8px 30px 8px 8px; width: 250px; border: 1px solid #ccc; border-radius: 5px;">
+            <span id="clearSearch"
+                style="position: absolute; right: 100px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #aaa; font-weight: bold;">✖</span>
+            <button type="submit"
+                style="padding: 8px 15px; background-color: #062A63; color: #fff; border: none; border-radius: 5px;">Search</button>
+        </form>
+
+        <a href="{% url 'show_all_parts' %}"
+            style="background-color:#062A63; color:white; padding:8px 20px; text-decoration:none; border-radius:5px;">
+            Add Custom Part
+        </a>
+    </div>
+</div>
+
+
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <h2 class="h">Add Part</h2>
+        <form id="addForm" method="post" action="{% url 'part' %}" class="form-group" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="record_id" value="{{ record_id }}">
+
+            <input type="hidden" id="platform_id_for_form" name="platform" value="">
+            <div class="form-group">
+                <label for="Employee_Name">Part No</label>
+                {{ form.part_no }}
+            </div>
+            <div class="form-group">
+                <label for="Employee_Name">Part Name</label>
+                {{ form.part_name }}
+            </div>
+            <div class="form-group">
+                <div class="select-wrapper">
+                    <label for="severitySelect">Severity</label>
+                    <select name="severity" id="severitySelect">
+                        <option value="">Select Severity</option>
+                        {% for severity in severities %}
+                        <option value="{{ severity|stringformat:'s' }}" {% if severity|stringformat:'s' == form.instance.severity|stringformat:'s' %}selected{% endif %}>{{ severity }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="select-wrapper">
+                    <label for="attributeSelect">Attribute</label>
+                    <select name="attribute" id="attributeSelect">
+                        <option value="">Select Attribute</option>
+                        {% for attribute in attributes %}
+                        <option value="{{ attribute }}" {% if attribute == form.instance.attribute %}selected{% endif %}>
+                            {{ attribute }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="select-wrapper">
+                    <label for="highlightSelect">Highlight</label>
+                    <select name="highlight" id="highlightSelect">
+                        <option value="">Select Highlight</option>
+                        {% for highlight in highlights %}
+                        <option value="{{ highlight }}" {% if highlight == form.instance.highlight %}selected{% endif %}>
+                            {{ highlight }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="select-wrapper">
+                    <label for="locationSelect">Location</label>
+                    <select name="location" id="locationSelect">
+                        <option value="">Select location</option>
+                        {% for location in locations %}
+                        <option value="{{ location }}" {% if location == form.instance.location %}selected{% endif %}>
+                            {{ location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <!-- <div class="form-group select-platform">
+                <span class="dropdown-label" onclick="toggleModelDropdown()">Select Parts</span>
+                <input type="text" id="modelSearchInput" placeholder="Search Part..." style="width: 100%; margin-bottom: 5px; padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
+                <div id="modelDropdown" class="dropdown-content">
+                    <label>
+                        Select/Deselect All
+                        <input type="checkbox" id="selectModelAll">
+                    </label>
+                    {% for model in form.fields.models.queryset %}
+                    <label>
+                        {{ model.model_code }}
+                        <input type="checkbox" name="models" value="{{ model.id }}" {% if model.id in form.initial.models %}checked{% endif %}>
+                    </label>
+                    {% endfor %}
+                </div>
+
+            </div> -->
+
+            <script>
+                // Toggle model dropdown visibility
+function toggleModelDropdown() {
+    const dropdown = document.getElementById('modelDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+    }
+}
+
+// Filter model checkboxes in dropdown by search
+document.addEventListener('DOMContentLoaded', function () {
+    const modelSearchInput = document.getElementById('modelSearchInput');
+    const modelDropdown = document.getElementById('modelDropdown');
+    if (modelSearchInput && modelDropdown) {
+        modelSearchInput.addEventListener('input', function () {
+            const search = this.value.toLowerCase();
+            modelDropdown.querySelectorAll('label').forEach(label => {
+                // Only filter actual model labels, not the select/deselect all
+                if (label.textContent.trim().toLowerCase().includes('select/deselect all')) return;
+                const code = label.textContent.toLowerCase();
+                label.style.display = code.includes(search) ? '' : 'none';
+            });
+        });
+    }
+});
+                // Function to fetch models based on platform selection and update the model dropdown
+function fetchModelsByPlatform(platformId) {
+    const modelDropdown = document.getElementById("modelDropdown");
+
+    if (!platformId) {
+        // If no platform selected, show all models (rendered server-side with Django template)
+        if (modelDropdown) {
+            modelDropdown.innerHTML = `
+                <label>
+                    Select/Deselect All
+                    <input type="checkbox" id="selectModelAll">
+                </label>
+                {% for model in form.fields.models.queryset %}
+                <label>
+                    {{ model.model_code }}
+                    <input type="checkbox" name="models" value="{{ model.id }}">
+                </label>
+                {% endfor %}
+            `;
+            bindSelectAllCheckbox();
+        }
+        return;
+    }
+
+    // Fetch models connected to the platform via AJAX
+    fetch(`/get_connected_models/?platform_id=${platformId}`)
+        .then(response => response.json())
+        .then(models => {
+            // Build the HTML for the model dropdown with select all checkbox
+            let html = `
+                <label>
+                    Select/Deselect All
+                    <input type="checkbox" id="selectModelAll">
+                </label>
+            `;
+
+            models.forEach(m => {
+                html += `
+                    <label>
+                        ${m.model_code}
+                        <input type="checkbox" name="models" value="${m.pk}">
+                    </label>
+                `;
+            });
+
+            if (modelDropdown) {
+                modelDropdown.innerHTML = html;
+                // Bind the select all checkbox event listener after content is rendered
+                bindSelectAllCheckbox();
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching models:", error);
+            // Fallback to showing all models if error occurs
+            if (modelDropdown) {
+                modelDropdown.innerHTML = `
+                    <label>
+                        Select/Deselect All
+                        <input type="checkbox" id="selectModelAll">
+                    </label>
+                    {% for model in form.fields.models.queryset %}
+                    <label>
+                        {{ model.model_code }}
+                        <input type="checkbox" name="models" value="{{ model.id }}">
+                    </label>
+                    {% endfor %}
+                `;
+                bindSelectAllCheckbox();
+            }
+        });
+}
+
+// Function to bind the "Select/Deselect All" checkbox event listener
+function bindSelectAllCheckbox() {
+    const selectAllBox = document.getElementById("selectModelAll");
+    const modelDropdown = document.getElementById("modelDropdown");
+    if (selectAllBox) {
+        selectAllBox.addEventListener("change", function () {
+            const checked = this.checked;
+            modelDropdown.querySelectorAll("input[name='models']").forEach(cb => {
+                cb.checked = checked;
+            });
+        });
+    }
+}
+
+// Fetch and update parts table (called on platform change or search)
+function fetchConnectedParts(platformId) {
+    let url = "{% url 'part' %}?ajax=1";
+    if (platformId) {
+        url += `&platform_id=${platformId}`;
+    }
+    const searchQuery = document.getElementById('searchInput').value;
+    if (searchQuery) {
+        url += `&q=${encodeURIComponent(searchQuery)}`;
+    }
+
+    fetch(url, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const newTable = doc.querySelector(".data-table");
+        if (newTable) {
+            document.querySelector(".data-table").innerHTML = newTable.innerHTML;
+        }
+    })
+    .catch(error => console.error("Error:", error));
+}
+
+            </script>
+            <!-- <div class="form-group">
+                <label for="image_processing_type">Select Image Processing Type</label>
+                <select name="image_processing_type" id="image_processing_type">
+                    <option value="">Select Image Processing Type</option>
+                    {% for operation in image_processing_data %}
+                    <option value="{{ operation.id }}" {% if form.instance.image_processing_type and operation.id == form.instance.image_processing_type.id %} selected{% endif %}>
+                        {{ operation.image_process }} - {{ operation.description_of_text }}
+                    </option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="partImage">Part Image</label>
+                <input type="file" id="partImage" name="image_path" class="form-control">
+                {% if form.instance.image_path %}
+                <small class="text-muted">
+                    Current File: {{ form.instance.image_path.name|cut:"image_path/image_path/part_images/" }}
+                </small>
+
+                {% endif %}
+            </div> -->
+
+            <div class="action-buttons">
+                <button type="button" class="edit" class="replace" id="replaceButton">Save
+                </button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" class="edit" class="sequence-change" id="sequenceChangeButton">Sequence
+                    Change</button>
+                <button type="button" class="delete">Cancel</button>
+            </div>
+
+            {% if form.errors %}
+            <p style="color: red;">{{ form.errors }}</p>
+            {% endif %}
+        </form>
+
+    </div>
+</div>
+
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Part No</th>
+            <th>Part Name</th>
+            <!-- <th>Image</th> -->
+             {% if user.is_superuser %}
+            <th>Update</th>
+            <th>Edit</th>
+            <th>Delete</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for index, item in data.items %}
+        <tr>
+            <td>{{ item.part_no }}</td>
+            <td>{{ item.part_name }}</td>
+            <!-- <td>
+                {% if item.image_path %}
+                <a href="#" onclick="event.preventDefault(); openImageModal('{{ item.image_path.url }}'); document.body.style.overflow='hidden'; return false;" class="action-buttons"
+                    style="color: #062A63; font-size: 20px;">
+                    View
+                </a>
+                {% else %}
+                No Image
+                {% endif %}
+            </td> -->
+            {% if user.is_superuser %}
+
+            <td>
+                <a href="#" onclick="openUpdateImageModal('{{ item.pk }}'); return false;" class="action-buttons"
+                    style="color: #28a745; font-size: 20px;">Update</a>
+            </td>
+            <td>
+                <a href="#" onclick="openEditModal('{{ item.pk }}'); return false;" class="action-buttons"
+                    style="color: #062A63; font-size: 20px;">Edit</a>
+            </td>
+            
+            <td>
+                <a href="#" onclick="event.preventDefault(); confirmDelete('{{ item.pk }}'); return false;" class="action-buttons"
+                    style="color: red; font-size: 20px;">Delete</a>
+            </td>
+            {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">No data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<!-- Move image modal outside the table so it always exists in the DOM -->
+<div id="imageModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeImageModal()">&times;</span>
+        <img id="modalImage" src="" alt="Part Image">
+    </div>
+</div>
+
+<!-- Update Image Modal -->
+<div id="updateImageModal" class="modal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between;">
+            <h2>Update Checkpoint, img</h2>
+            <span class="close" onclick="closeUpdateImageModal()">&times;</span>
+        </div>
+        <form id="updateImageForm" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" id="update_part_id" name="part_id" value="">
+            
+            <div class="form-group">
+                <label for="">Upload Image</label>
+                <input type="file" name="image_path" id="update_image_path">
+               
+            </div>
+            
+            <div class="form-group">
+                <label for="update_checkpoint">Checkpoint Text (Optional)</label>
+                <textarea name="checkpoint" id="update_checkpoint" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; resize: vertical;" placeholder="Enter checkpoint description..."></textarea>
+               
+            </div>
+            
+            <div class="form-group">
+                <label for="update_image_processing_type">Image Processing Type (Optional)</label>
+                <select name="image_processing_type" id="update_image_processing_type" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                    <option value="">-- None --</option>
+                    {% if image_processing_types %}
+                        {% for ip in image_processing_types %}
+                            <option value="{{ ip.id }}">{{ ip.image_process }}{% if ip.description_of_text %} - {{ ip.description_of_text }}{% endif %}</option>
+                        {% endfor %}
+                    {% elif image_processing_data %}
+                        {% for ip in image_processing_data %}
+                            <option value="{{ ip.id }}">{{ ip.image_process }}{% if ip.description_of_text %} - {{ ip.description_of_text }}{% endif %}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+            
+            <div class="form-group select-platform">
+                <span class="dropdown-label" onclick="toggleUpdateModelDropdown()">Select Parts to Update</span>
+                <input type="text" id="updateModelSearchInput" placeholder="Search Part..." style="width: 100%; margin-bottom: 5px; padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
+                <div id="connectedModelsCheckboxes" class="dropdown-content">
+                   
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button type="submit" class="edit">Update Selected</button>
+                <button type="button" class="delete" onclick="closeUpdateImageModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ===================
+// 1. Flash Messages via SweetAlert
+// ===================
+function displayFlashMessages() {
+    {% for message in messages %}
+    Swal.fire({
+        icon: "{{ message.tags }}",
+        text: "{{ message }}"
+    });
+    {% endfor %}
+}
+window.addEventListener('DOMContentLoaded', function () {
+    displayFlashMessages();
+});
+
+// ========================
+// 2. Toast Helper
+// ========================
+function showToast(message, type = 'success') {
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: type,
+        title: message,
+        showConfirmButton: false,
+        timer: 2000
+    });
+}
+
+// ========================
+// 3. Table reload helper
+// ========================
+function reloadPartsTable() {
+    const platformId = document.getElementById('platformDropdown').value;
+    const searchQuery = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+    let url = window.location.pathname + '?ajax=1';
+    if (platformId) url += `&platform_id=${platformId}`;
+    if (searchQuery) url += `&q=${encodeURIComponent(searchQuery)}`;
+    fetch(url)
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTbody = doc.querySelector('.data-table tbody');
+            if (newTbody)
+                document.querySelector('.data-table tbody').innerHTML = newTbody.innerHTML;
+        });
+}
+
+// ===============
+// 4. Helper: Set required fields
+// ===============
+function setRequiredFields(form) {
+    if (!form) {
+        console.error('setRequiredFields: form is null');
+        return;
+    }
+    
+    const partNoField = form.querySelector('[name="part_no"]') || form.querySelector('#id_part_no');
+    const partNameField = form.querySelector('[name="part_name"]') || form.querySelector('#id_part_name');
+    
+    console.log('setRequiredFields - Found fields:', {
+        partNo: !!partNoField,
+        partName: !!partNameField
+    });
+    
+    if (partNoField) {
+        partNoField.required = true;
+        console.log('Set part_no as required');
+    } else {
+        console.warn('part_no field not found');
+    }
+    
+    if (partNameField) {
+        partNameField.required = true;
+        console.log('Set part_name as required');
+    } else {
+        console.warn('part_name field not found');
+    }
+    
+    // Optional fields - uncomment if needed
+    // const severityField = form.querySelector('[name="severity"]');
+    // const highlightField = form.querySelector('[name="highlight"]');
+    // const attributeField = form.querySelector('[name="attribute"]');
+    // const locationField = form.querySelector('[name="location"]');
+    // const imageProcessingField = form.querySelector('[name="image_processing_type"]');
+    // const imagePathField = form.querySelector('[name="image_path"]');
+    
+    // if (severityField) severityField.required = true;
+    // if (highlightField) highlightField.required = true;
+    // if (attributeField) attributeField.required = true;
+    // if (locationField) locationField.required = true;
+    // if (imageProcessingField) imageProcessingField.required = false;
+    // if (imagePathField) imagePathField.required = false;
+}
+
+// Inline error helpers
+function clearInlineErrors(container) {
+    if (!container) return;
+    container.querySelectorAll('.inline-error').forEach(e => e.remove());
+}
+
+function showInlineError(element, message) {
+    if (!element) return;
+    // If an input element was passed, show error in its closest .form-group if possible
+    let container = element;
+    if (element.closest) {
+        const fg = element.closest('.form-group');
+        if (fg) container = fg;
+    }
+    clearInlineErrors(container);
+    const span = document.createElement('div');
+    span.className = 'inline-error';
+    span.style.color = 'red';
+    span.style.marginTop = '6px';
+    span.textContent = message;
+    container.appendChild(span);
+
+    // Clear the error when user interacts
+    const inputs = container.querySelectorAll('input, textarea, select');
+    inputs.forEach(i => i.addEventListener('input', () => clearInlineErrors(container), { once: true }));
+}
+
+// ============
+// 5. Modal open logic (Add/Edit)
+// ============
+function clearImagePreview() {
+    const form = document.getElementById('addForm');
+    // const imageGroup = form.querySelector('input[name="image_path"]').parentNode;
+    // const existingPreview = imageGroup.querySelector('.edit-image-ui');
+    // if (existingPreview) {
+    //     existingPreview.remove();
+    // }
+}
+
+// Open modal for Add or Edit parts
+function openPartModal(isEdit = false, pk = null) {
+    console.log('openPartModal called - isEdit:', isEdit, 'pk:', pk);
+    
+    const form = document.getElementById('addForm');
+    const modal = document.getElementById('myModal');
+
+    if (!form) {
+        console.error('Form with ID "addForm" not found');
+        alert('Error: Form not found. Please refresh the page.');
+        return;
+    }
+    
+    if (!modal) {
+        console.error('Modal with ID "myModal" not found');
+        alert('Error: Modal not found. Please refresh the page.');
+        return;
+    }
+
+    // Always clear old image preview before proceeding
+    clearImagePreview();
+
+    // Reset form and clear previous errors
+    form.reset();
+    form.querySelectorAll('.input-error').forEach(e => e.remove());
+    
+    const recordIdField = form.querySelector('[name="record_id"]');
+    const titleElement = document.querySelector('.modal-content h2.h');
+    
+    if (recordIdField) recordIdField.value = '';
+    if (titleElement) titleElement.textContent = isEdit ? 'Edit PartName' : 'Add PartName';
+
+    if (isEdit && pk) {
+        console.log('Opening edit modal for part ID:', pk);
+        // Fetch existing part data for editing via AJAX
+        fetch(`/part_edit/${pk}/`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            console.log('Edit fetch response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Edit data received:', data);
+            if (data.success) {
+                // Populate form fields with data
+                try {
+                    const recordIdField = form.querySelector('[name="record_id"]');
+                    const partNoField = form.querySelector('[name="part_no"]') || form.querySelector('#id_part_no');
+                    const partNameField = form.querySelector('[name="part_name"]') || form.querySelector('#id_part_name');
+                    
+                    console.log('Found fields:', {
+                        recordId: !!recordIdField,
+                        partNo: !!partNoField,
+                        partName: !!partNameField
+                    });
+                    
+                    if (recordIdField) recordIdField.value = pk;
+                    if (partNoField) partNoField.value = data.part_no || '';
+                    if (partNameField) partNameField.value = data.part_name || '';
+                    
+                    // Set dropdown values with existence checks
+                    const severitySelect = document.getElementById('severitySelect');
+                    const attributeSelect = document.getElementById('attributeSelect');
+                    const highlightSelect = document.getElementById('highlightSelect');
+                    const locationSelect = document.getElementById('locationSelect');
+                    const imageProcessingSelect = document.getElementById('image_processing_type');
+                    const updateImageProcessingSelect = document.getElementById('update_image_processing_type');
+                    
+                    console.log('Found dropdowns:', {
+                        severity: !!severitySelect,
+                        attribute: !!attributeSelect,
+                        highlight: !!highlightSelect,
+                        location: !!locationSelect,
+                        imageProcessing: !!imageProcessingSelect
+                    });
+                    
+                    if (severitySelect) severitySelect.value = data.severity || '';
+                    if (attributeSelect) attributeSelect.value = data.attribute || '';
+                    if (highlightSelect) highlightSelect.value = data.highlight || '';
+                    if (locationSelect) locationSelect.value = data.location || '';
+                    if (imageProcessingSelect) imageProcessingSelect.value = data.image_processing_type || '';
+                    if (updateImageProcessingSelect) updateImageProcessingSelect.value = data.image_processing_type || data.image_processing_type_id || '';
+
+                    console.log('Form populated successfully for part:', pk);
+                } catch (formError) {
+                    console.error('Error populating form fields:', formError);
+                    showToast('Error populating form fields: ' + formError.message, 'error');
+                }
+
+                // Set connected model checkboxes (commented out since model dropdown is disabled)
+                // const connectedModels = data.models || [];
+                // document.querySelectorAll('#modelDropdown input[name="models"]').forEach(cb => {
+                //     cb.checked = connectedModels.includes(parseInt(cb.value));
+                // });
+
+                // Set fields required state (implement as needed)
+                try {
+                    setRequiredFields(form);
+                } catch (requiredFieldsError) {
+                    console.error('Error setting required fields:', requiredFieldsError);
+                }
+
+                // Add image preview and remove checkbox dynamically if image exists
+                if (data.image_path) {
+                    const imagePathInput = form.querySelector('input[name="image_path"]');
+                    if (imagePathInput && imagePathInput.parentNode) {
+                        const imageGroup = imagePathInput.parentNode;
+                        const div = document.createElement('div');
+                        div.className = 'edit-image-ui';
+                        div.innerHTML = `
+                            
+                            <small class="text-muted">Current File: ${data.image_name.replace(/^.*[\\/]/, '')}</small>
+                            <br>
+                            <div class="form-check" style="display:flex; margin-top: 10px; margin-bottom: 10px;">
+                                <p>Deselect Image :</p>
+                                <input type="checkbox" class="form-check-input" id="removeImageCheckbox" name="remove_image" style="width: 20px; margin-left:130px; " placeholder="cut img">
+                               
+                            </div>
+                        `;
+                        imageGroup.appendChild(div);
+                    } else {
+                        console.warn('Image path input field not found in form');
+                    }
+                }
+
+                // Show modal
+                console.log('Showing modal for edit');
+                modal.style.display = 'block';
+            } else {
+                console.error('Edit failed:', data.error || 'Unknown error');
+                showToast(data.error || 'Error loading part!', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Edit fetch error:', error);
+            showToast('Failed to load part data: ' + error.message, 'error');
+        });
+    } else {
+        // Add mode: show modal without any image preview
+        console.log('Add mode - showing modal');
+        const platformDropdown = document.getElementById('platformDropdown');
+        const platformIdField = document.getElementById('platform_id_for_form');
+        
+        if (platformDropdown && platformIdField) {
+            platformIdField.value = platformDropdown.value;
+        } else {
+            console.warn('Client dropdown or hidden field not found');
+        }
+        
+        try {
+            setRequiredFields(form);
+        } catch (requiredFieldsError) {
+            console.error('Error setting required fields in add mode:', requiredFieldsError);
+        }
+        modal.style.display = 'block';
+        console.log('Modal display set to block');
+    }
+}
+
+// Submit form (Add/Edit)
+function submitPartForm(sequenceChange, callback) {
+    const form = document.getElementById('addForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        if (callback) callback();
+        return;
+    }
+    // Remove previous errors
+    form.querySelectorAll('.input-error').forEach(e => e.remove());
+
+    let formData = new FormData(form);
+    if (sequenceChange) formData.append('sequence_change', 'true');
+
+    // Debug: Log form data being sent
+    console.log('Form data being submitted:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+
+    const recordId = form.querySelector('[name="record_id"]').value;
+    const url = recordId ? `/part_edit/${recordId}/` : form.action;
+    console.log('Submitting to URL:', url, 'Record ID:', recordId);
+    
+    const submitButton = sequenceChange ? document.getElementById('sequenceChangeButton') : document.getElementById('replaceButton');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            console.error('HTTP error! status:', response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        form.querySelectorAll('.input-error').forEach(e => e.remove());
+        if (data.success) {
+            showToast(data.message || 'Success!', sequenceChange ? 'info' : 'success');
+
+            // Clear image preview on success
+            clearImagePreview();
+
+            document.getElementById('myModal').style.display = 'none';
+            reloadPartsTable();
+            form.reset();
+            form.querySelector('[name="record_id"]').value = '';
+            document.querySelector('.modal-content h2.h').textContent = 'Add Ferrules Name';
+        } else {
+            if (data.error) {
+                if (data.error.includes('Duplicate Ferrules')) {
+                    const partNameGroup = form.querySelector('[name="part_name"]').closest('.form-group');
+                    let span = document.createElement('span');
+                    span.className = 'input-error';
+                    span.style.color = 'red';
+                    span.textContent = data.error;
+                    partNameGroup.appendChild(span);
+                } else {
+                    showToast(data.error, 'error');
+                }
+            }
+            if (data.errors) {
+                Object.entries(data.errors).forEach(([field, errors]) => {
+                    const fieldInput = form.querySelector(`[name="${field}"]`);
+                    if (fieldInput) {
+                        const group = fieldInput.closest('.form-group');
+                        let span = document.createElement('span');
+                        span.className = 'input-error';
+                        span.style.color = 'red';
+                        span.textContent = Array.isArray(errors) ? errors.join(' ') : errors;
+                        group.appendChild(span);
+                    }
+                });
+            }
+            showToast('Please correct the errors', 'error');
+        }
+    })
+    .catch(() => showToast('Failed to save. Please try again.', 'error'))
+    .finally(() => {
+        if (callback) callback();
+        submitButton.disabled = false;
+        submitButton.innerHTML = sequenceChange ? 'Sequence Change' : 'Save';
+    });
+}
+
+// Cancel button to hide modal and clear form
+document.querySelector('.delete').addEventListener('click', function(e) {
+    e.preventDefault();
+    const modal = document.getElementById('myModal');
+    const form = document.getElementById('addForm');
+    modal.style.display = 'none';
+    form.reset();
+    form.querySelector('[name="record_id"]').value = '';
+    document.querySelector('.modal-content h2.h').textContent = 'Add Ferrules Name';
+
+    // Clear image preview on cancel
+    clearImagePreview();
+});
+
+
+// ================
+// 6. Submit logic (Add/Edit/sequence change)
+// ================
+function submitPartForm(sequenceChange, callback) {
+    const form = document.getElementById('addForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        if (callback) callback();
+        return;
+    }
+    // Remove all previous error hints
+    form.querySelectorAll('.input-error').forEach(e => e.remove());
+    let formData = new FormData(form);
+    if (sequenceChange) formData.append('sequence_change', 'true');
+    const recordId = form.querySelector('[name="record_id"]').value;
+    const url = recordId ? `/part_edit/${recordId}/` : form.action;
+    const submitButton = sequenceChange ? document.getElementById('sequenceChangeButton') : document.getElementById('replaceButton');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        form.querySelectorAll('.input-error').forEach(e => e.remove());
+        if (data.success) {
+            showToast(data.message || 'Success!', sequenceChange ? 'info' : 'success');
+            document.getElementById('myModal').style.display = 'none';
+            reloadPartsTable();
+            form.reset();
+            form.querySelector('[name="record_id"]').value = '';
+            document.querySelector('.modal-content h2.h').textContent = 'Add Ferrules Name';
+        } else {
+            if (data.error) {
+                if (data.error.includes('Duplicate part')) {
+                    const partNameGroup = form.querySelector('[name="part_name"]').closest('.form-group');
+                    let span = document.createElement('span');
+                    span.className = 'input-error';
+                    span.style.color = 'red';
+                    span.textContent = data.error;
+                    partNameGroup.appendChild(span);
+                } else {
+                    showToast(data.error, 'error');
+                }
+            }
+            if (data.errors) {
+                Object.entries(data.errors).forEach(([field, errors]) => {
+                    const fieldInput = form.querySelector(`[name="${field}"]`);
+                    if (fieldInput) {
+                        const group = fieldInput.closest('.form-group');
+                        let span = document.createElement('span');
+                        span.className = 'input-error';
+                        span.style.color = 'red';
+                        span.textContent = Array.isArray(errors) ? errors.join(' ') : errors;
+                        group.appendChild(span);
+                    }
+                });
+            }
+            showToast('Please correct the errors', 'error');
+        }
+    })
+    .catch(() => showToast('Failed to save. Please try again.', 'error'))
+    .finally(() => {
+        if (callback) callback();
+        submitButton.disabled = false;
+        submitButton.innerHTML = sequenceChange ? 'Sequence Change' : 'Save';
+    });
+}
+
+// ===========
+// 7. Delete logic (AJAX)
+// ===========
+window.confirmDelete = function (pk) {
+    const form = document.getElementById('addForm');
+    Swal.fire({
+        title: 'Delete this Ferrules?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/part_delete/${pk}/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message || 'Deleted!', 'success');
+                    reloadPartsTable();
+                } else {
+                    showToast(data.error || 'Error!', 'error');
+                }
+            })
+            .catch(() => {
+                showToast('Network error!', 'error');
+            });
+        }
+    });
+}
+
+// ======================
+// 8. Image size check
+// ======================
+document.addEventListener("DOMContentLoaded", function () {
+    const partImageInput = document.getElementById("partImage");
+    if (partImageInput) {
+        partImageInput.addEventListener("change", function () {
+            const file = this.files[0];
+            const maxSizeKB = 300;
+            const maxSizeBytes = maxSizeKB * 1024;
+            if (file && file.size > maxSizeBytes) {
+                alert(`Image size exceeds ${maxSizeKB} KB. Please choose a smaller file.`);
+                this.value = "";
+            }
+        });
+    }
+});
+
+// ==========================
+// 9. Main add/edit/cancel/sequence button logic
+// ==========================
+document.addEventListener('DOMContentLoaded', function () {
+    const addButton = document.getElementById('addButton');
+    const modal = document.getElementById('myModal');
+    const closeModal = document.querySelector('.close');
+    const cancelBtn = document.querySelector('.delete');
+    const sequenceChangeButton = document.getElementById('sequenceChangeButton');
+    const replaceButton = document.getElementById('replaceButton');
+    const form = document.getElementById('addForm');
+    const platformDropdown = document.getElementById('platformDropdown');
+    const searchInput = document.getElementById('searchInput');
+
+    // ==========================================
+    // Restore last selected platform from sessionStorage
+    // ==========================================
+    const savedPlatformId = sessionStorage.getItem('selectedPlatformId');
+    if (savedPlatformId && platformDropdown) {
+        platformDropdown.value = savedPlatformId;
+        // Small delay to ensure DOM is fully ready, then reload table
+        setTimeout(() => {
+            reloadPartsTable();
+        }, 100);
+    }
+
+    // ==========================================
+    // Platform dropdown change handler
+    // ==========================================
+    if (platformDropdown) {
+        platformDropdown.addEventListener('change', function () {
+            // Save selected platform to sessionStorage
+            sessionStorage.setItem('selectedPlatformId', this.value);
+            
+            // Clear search input when platform changes
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            
+            // Reload table with new platform
+            reloadPartsTable();
+        });
+    }
+
+    addButton.addEventListener('click', () => {
+        if (platformDropdown.value === "") {
+            alert('Please select a client first.');
+            return;
+        }
+        openPartModal(false);
+    });
+
+    window.openEditModal = function (pk) {
+        console.log('openEditModal called with pk:', pk, 'type:', typeof pk);
+        if (!pk) {
+            console.error('No pk provided to openEditModal');
+            showToast('Error: No Ferrules ID provided', 'error');
+            return;
+        }
+        openPartModal(true, pk);
+    };
+
+ 
+    if (closeModal) closeModal.addEventListener('click', () => { modal.style.display = 'none'; });
+    if (cancelBtn) cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.style.display = 'none';
+        form.reset();
+        form.querySelector('[name="record_id"]').value = '';
+        document.querySelector('.modal-content h2.h').textContent = 'Add Ferrules Name';
+    });
+
+    form.addEventListener('submit', function (e) { e.preventDefault(); });
+
+    replaceButton.addEventListener('click', function () { submitPartForm(false); });
+    sequenceChangeButton.addEventListener('click', function () { submitPartForm(true); });
+    if ('{{ edit_Part_open|default_if_none:"" }}') {
+       
+    }
+
+    
+});
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("searchInput");
+    const clearBtn = document.getElementById("clearSearch");
+    if (clearBtn && input) {
+        clearBtn.addEventListener("click", function () {
+            input.value = '';
+            input.focus();
+        });
+    }
+});
+
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.getElementById("searchInput");
+        const clearBtn = document.getElementById("clearSearch");
+
+        clearBtn.addEventListener("click", function (e) {
+            input.value = '';
+            input.focus();
+
+            // Trigger the form submit to refresh the table
+            e.preventDefault();
+            const query = searchInput.value;
+            let url = '{% url "part" %}?ajax=1';
+            const platformId = document.getElementById('platformDropdown').value;
+            if (platformId) {
+                url += `&platform_id=${platformId}`;
+            }
+            if (query) {
+                url += `&q=${encodeURIComponent(query)}`;
+            }
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTable = doc.querySelector('.data-table');
+                    if (newTable) {
+                        document.querySelector('.data-table').innerHTML = newTable.innerHTML;
+                    }
+                });
+
+
+        });
+    });
+</script>
+<script>
+    // document.addEventListener("DOMContentLoaded", function () {
+    //     // Initialize Select2 only (do not replace your change logic)
+    //     $('#platformDropdown').select2({
+    //         placeholder: "Select Platform",
+    //         allowClear: true,
+    //         width: 'resolve'
+    //     });
+    // });
+    function openImageModal(imageUrl) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modalImg.src = imageUrl;
+    modal.style.display = 'flex';  // Show modal with flex for centering
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.style.display = 'none';
+    const modalImg = document.getElementById('modalImage');
+    modalImg.src = '';  // Clear image src to reset
+    document.body.style.overflow = '';
+}
+document.addEventListener('DOMContentLoaded', function () {
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+
+    searchForm.addEventListener('submit', function (e) {
+        e.preventDefault(); // prevent full page reload on form submit
+
+        const query = searchInput.value.trim();
+        const platformId = document.getElementById('platformDropdown') ? document.getElementById('platformDropdown').value : '';
+
+        // Build URL for AJAX request with search query and platformId if applicable
+        let url = window.location.pathname + '?ajax=1';
+        if (platformId) url += `&platform_id=${platformId}`;
+        if (query) url += `&q=${encodeURIComponent(query)}`;
+
+        // Fetch filtered table HTML
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTbody = doc.querySelector('.data-table tbody');
+                if (newTbody) {
+                    document.querySelector('.data-table tbody').innerHTML = newTbody.innerHTML;
+                }
+            })
+            .catch(() => {
+                // Optionally show an error toast or console error
+                console.error('Failed to load search results.');
+            });
+    });
+
+    // Clear search button logic to reset input and reload all results without reload
+    const clearBtn = document.getElementById('clearSearch');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            searchInput.value = '';
+            searchInput.focus();
+
+            // Reload full table without search filter
+            let url = window.location.pathname + '?ajax=1';
+            const platformId = document.getElementById('platformDropdown') ? document.getElementById('platformDropdown').value : '';
+            if (platformId) url += `&platform_id=${platformId}`;
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTbody = doc.querySelector('.data-table tbody');
+                    if (newTbody) {
+                        document.querySelector('.data-table tbody').innerHTML = newTbody.innerHTML;
+                    }
+                });
+        });
+    }
+});
+    
+</script>
+<!-- Add Update Image Modal JavaScript -->
+<script>
+// Open Update Image Modal - Define globally to ensure availability
+function openUpdateImageModal(partId) {
+    console.log('openUpdateImageModal called with partId:', partId); // Debug log
+    const modal = document.getElementById('updateImageModal');
+    const form = document.getElementById('updateImageForm');
+    
+    if (!modal) {
+        console.error('updateImageModal not found');
+        showToast('Modal not found', 'error');
+        return;
+    }
+    
+    if (!form) {
+        console.error('updateImageForm not found');
+        showToast('Form not found', 'error');
+        return;
+    }
+    
+    document.getElementById('update_part_id').value = partId;
+    
+    // Fetch connected models for this part
+    fetch(`/get_connected_models/?part_id=${partId}`)
+        .then(response => response.json())
+        .then(models => {
+            console.log('Received models data:', models); // Debug log
+            const checkboxContainer = document.getElementById('connectedModelsCheckboxes');
+            if (models.length === 0) {
+                checkboxContainer.innerHTML = '<p>No models connected to this Ferrules.</p>';
+            } else {
+                // Clear container and create a select-all control using DOM APIs
+                checkboxContainer.innerHTML = '';
+                const selectAllWrapper = document.createElement('div');
+                selectAllWrapper.style.display = 'block';
+                selectAllWrapper.style.margin = '10px 0';
+                selectAllWrapper.style.padding = '10px';
+                selectAllWrapper.style.border = '2px solid #007cba';
+
+                const selectAllCheckbox = document.createElement('input');
+                selectAllCheckbox.type = 'checkbox';
+                selectAllCheckbox.id = 'selectUpdateModelAll';
+                selectAllCheckbox.style.marginRight = '10px';
+                selectAllCheckbox.style.verticalAlign = 'middle';
+
+                const selectAllLabel = document.createElement('span');
+                selectAllLabel.style.fontSize = '14px';
+                selectAllLabel.style.color = 'black';
+                selectAllLabel.style.fontWeight = 'bold';
+                selectAllLabel.style.verticalAlign = 'middle';
+                selectAllLabel.textContent = 'Select/Deselect All';
+
+                selectAllWrapper.appendChild(selectAllCheckbox);
+                selectAllWrapper.appendChild(selectAllLabel);
+                checkboxContainer.appendChild(selectAllWrapper);
+
+                console.log('Models array length:', models.length);
+                models.forEach((model, index) => {
+                    // Build display text
+                    let displayText = 'Model ' + (index + 1);
+                    if (model.model_code) displayText = model.model_code;
+                    else if (model.code) displayText = model.code;
+                    else if (model.name) displayText = model.name;
+                    else if (model.title) displayText = model.title;
+                    if (model.model_description) displayText += ' - ' + model.model_description;
+                    else if (model.description) displayText += ' - ' + model.description;
+                    else if (model.desc) displayText += ' - ' + model.desc;
+
+                    const modelId = model.pk || model.id || index;
+
+                    // Create item container
+                    const item = document.createElement('div');
+                    item.className = 'model-item';
+                    item.style.display = 'block';
+                    item.style.margin = '3px 0';
+                    item.style.padding = '5px';
+                    item.style.border = '1px solid #ccc';
+                    item.style.background = 'white';
+                    item.style.display = 'flex';
+                    item.style.justifyContent = 'space-between';
+                    item.style.alignItems = 'center';
+
+                    const span = document.createElement('span');
+                    span.style.fontSize = '13px';
+                    span.style.color = 'black';
+                    span.style.fontWeight = 'normal';
+                    span.textContent = displayText;
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'models';
+                    checkbox.value = modelId;
+                    checkbox.style.marginLeft = '8px';
+                    checkbox.style.verticalAlign = 'middle';
+
+                    item.appendChild(span);
+                    item.appendChild(checkbox);
+                    checkboxContainer.appendChild(item);
+                });
+
+                // Bind select all functionality for update modal
+                bindUpdateSelectAllCheckbox();
+            }
+
+            // Also fetch part details to prefill optional fields (image_processing_type, image name, etc.)
+            try {
+                fetch(`/part_edit/${partId}/?ajax=1`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(resp => resp.json())
+                    .then(partData => {
+                        // Prefill update image processing select if present
+                        try {
+                            const updateSelect = document.getElementById('update_image_processing_type');
+                            if (updateSelect && partData.image_processing_type) {
+                                updateSelect.value = partData.image_processing_type;
+                            }
+
+                            // If needed, show current image name near the file input
+                            if (partData.image_name) {
+                                const imageInput = document.getElementById('update_image_path');
+                                if (imageInput && imageInput.parentNode) {
+                                    let info = imageInput.parentNode.querySelector('.current-image-info');
+                                    if (!info) {
+                                        info = document.createElement('div');
+                                        info.className = 'current-image-info';
+                                        info.style.marginTop = '6px';
+                                        imageInput.parentNode.appendChild(info);
+                                    }
+                                    info.textContent = `Current file: ${partData.image_name}`;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Failed to prefill Ferrules details in update modal', e);
+                        }
+                    })
+                    .catch(err => { console.warn('Could not fetch Ferrules details for update modal', err); });
+            } catch (e) {
+                console.warn('Error starting Ferrules details fetch', e);
+            }
+
+            modal.style.display = 'flex';
+        })
+        .catch(error => {
+            console.error('Error fetching models:', error);
+            showToast('Error loading connected models', 'error');
+        });
+};
+
+// Make function globally available
+window.openUpdateImageModal = openUpdateImageModal;
+
+// Toggle update model dropdown visibility
+function toggleUpdateModelDropdown() {
+    const dropdown = document.getElementById('connectedModelsCheckboxes');
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+    }
+}
+
+// Function to bind the "Select/Deselect All" checkbox event listener for update modal
+function bindUpdateSelectAllCheckbox() {
+    const selectAllBox = document.getElementById("selectUpdateModelAll");
+    const modelDropdown = document.getElementById("connectedModelsCheckboxes");
+    if (selectAllBox) {
+        selectAllBox.addEventListener("change", function () {
+            const checked = this.checked;
+            modelDropdown.querySelectorAll("input[name='models']").forEach(cb => {
+                cb.checked = checked;
+            });
+        });
+    }
+}
+
+// Filter update model checkboxes by search
+document.addEventListener('DOMContentLoaded', function () {
+    const updateModelSearchInput = document.getElementById('updateModelSearchInput');
+    const connectedModelsCheckboxes = document.getElementById('connectedModelsCheckboxes');
+    if (updateModelSearchInput && connectedModelsCheckboxes) {
+        updateModelSearchInput.addEventListener('input', function () {
+            const search = this.value.toLowerCase();
+            console.log('Search input:', search); // Debug log
+            // Filter items created with class 'model-item'
+            connectedModelsCheckboxes.querySelectorAll('.model-item').forEach(item => {
+                const text = (item.textContent || '').trim().toLowerCase();
+                item.style.display = text.includes(search) ? '' : 'none';
+            });
+        });
+    }
+});
+
+// Close Update Image Modal
+function closeUpdateImageModal() {
+    const modal = document.getElementById('updateImageModal');
+    const form = document.getElementById('updateImageForm');
+    modal.style.display = 'none';
+    form.reset();
+    document.getElementById('connectedModelsCheckboxes').innerHTML = '';
+}
+
+// Handle Update Image Form Submission
+document.getElementById('updateImageForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const partId = document.getElementById('update_part_id').value;
+    const selectedModels = document.querySelectorAll('input[name="models"]:checked');
+    const imageFile = document.getElementById('update_image_path').files[0];
+    const checkpointText = document.getElementById('update_checkpoint').value.trim();
+    const imageProcessingSelect = document.getElementById('update_image_processing_type');
+    const selectedImageProcessing = imageProcessingSelect ? imageProcessingSelect.value : '';
+
+    // Clear previous inline errors
+    clearInlineErrors(document.getElementById('connectedModelsCheckboxes'));
+    clearInlineErrors(document.getElementById('update_checkpoint'));
+    clearInlineErrors(document.getElementById('update_image_path'));
+    
+    // Validation: at least one model selected
+    if (selectedModels.length === 0) {
+        showInlineError(document.getElementById('connectedModelsCheckboxes'), 'Please select at least one model.');
+        return;
+    }
+    
+    // Validation: at least image or checkpoint or image_processing_type provided
+    if (!imageFile && !checkpointText && !selectedImageProcessing) {
+        const msg = 'Please provide either checkpoint or image or image processing type (or a combination).';
+        // Show inline error next to checkpoint textarea and the file input
+        showInlineError(document.getElementById('update_checkpoint'), msg);
+        showInlineError(document.getElementById('update_image_path'), msg);
+        return;
+    }
+    
+    // Prepare confirmation message based on what will be updated
+    let updateType = '';
+    if (imageFile && checkpointText) {
+        updateType = 'image and checkpoint';
+    } else if (imageFile) {
+        updateType = 'image';
+    } else {
+        updateType = 'checkpoint';
+    }
+    
+    // Show confirmation dialog
+    Swal.fire({
+        title: 'Are you sure?',
+        html: `You are about to update <strong>${updateType}</strong> for <strong>${selectedModels.length}</strong> selected model(s).<br><br>This action cannot be undone.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#062A63',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, update selected!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Proceed with the update
+            performUpdate();
+        }
+    });
+    
+    function performUpdate() {
+        fetch(`/update_part_image_and_checkpoint_for_models/${partId}/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'Update completed successfully', 'success');
+            closeUpdateImageModal();
+        } else {
+            showToast(data.error || 'Error during update', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Network error occurred', 'error');
+    });
+    }
+});
+
+</script>
+
+<link rel="stylesheet" href="{% static 'node_modules/select2/dist/css/select2.min.css' %}">
+
+<!-- jQuery (required for Select2) -->
+<script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
+
+<!-- Select2 JS -->
+<script src="{% static 'node_modules/select2/dist/js/select2.min.js' %}"></script>
+<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+
+{% endblock %}
