@@ -455,6 +455,7 @@ class FerruleNumberMaster(models.Model):
 
     def __str__(self):
         return str(self.number)
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class model_code_tbl(models.Model):
     model_code = models.CharField(max_length=255)
@@ -464,7 +465,16 @@ class model_code_tbl(models.Model):
     burden = models.CharField(max_length=50)
     label_type = models.CharField(max_length=255)
     ferrule_direction = models.CharField(max_length=255)
-    no_of_ferrules = models.IntegerField()
+    no_of_ferrules = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(6)]
+    )
+
+    ferrule_direction = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
     log_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):

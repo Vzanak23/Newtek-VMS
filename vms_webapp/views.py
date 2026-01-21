@@ -53,7 +53,7 @@ def user_login(request):
                 return redirect("PlatForm")
             else:
                 # Redirect to a different page for non-superusers
-                return redirect("report_screens")
+                return redirect("PlatForm")
         
         else:
             messages.error(
@@ -1786,7 +1786,6 @@ def copy_model_data(request):
     )
 
 
-
 @login_required
 def model_part_selection(request):
     if not request.user.is_authenticated:
@@ -1794,22 +1793,21 @@ def model_part_selection(request):
 
     platform_id = request.GET.get('platform_id', None)
 
-    # platforms = platform.objects.all()
     platforms = platform.objects.all().order_by('platform')
     models = model_code_tbl.objects.none()
     parts = part_tbl.objects.none()
     selected_platform = None
 
+    # 🔹 GET: Show all models (even 0 ferrules) and all parts
     if platform_id:
         platform_obj = get_object_or_404(platform, pk=platform_id)
-        models = model_code_tbl.objects.filter(platform=platform_obj)
+        models = model_code_tbl.objects.filter(platform=platform_obj)  # show all models
         parts = part_tbl.objects.filter(platform=platform_obj)
-        selected_platform = platform.objects.get(id=platform_id)
+        selected_platform = platform_obj
     else:
         models = model_code_tbl.objects.none()
         parts = part_tbl.objects.none()
         selected_platform = None
-        
 
     selected_model_text = None
     model_data = None
@@ -1817,7 +1815,9 @@ def model_part_selection(request):
     is_view_operation = False
 
     if request.method == "POST":
+
         if "view_button" in request.POST:
+            # 👁 VIEW CONNECTIONS
             is_view_operation = True
             selected_model_id = request.POST.get("selectedModelView")
             if selected_model_id:
@@ -1828,7 +1828,6 @@ def model_part_selection(request):
                     model_data = sorted(model_data, key=lambda x: x.part.part_no)
                     msg = f"Displaying connections for {selected_model_text}"
 
-                  
                     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                         connections = []
                         for data in model_data:
@@ -1861,72 +1860,88 @@ def model_part_selection(request):
                     return JsonResponse({'success': False, 'message': msg})
                 else:
                     messages.error(request, msg)
+
         else:
+            # 🔗 CREATE CONNECTIONS
             selected_models = request.POST.getlist("selectedModels")
             selected_parts = request.POST.getlist("selectedParts")
 
             if not selected_models:
-                msg = "Please select at least one model."
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'message': msg})
-                else:
-                    messages.error(request, msg)
-            elif not selected_parts:
-                msg = "Please select at least one part."
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'message': msg})
-                else:
-                    messages.error(request, msg)
-            else:
-                first_model = model_code_tbl.objects.filter(id__in=selected_models).first()
-                created_count = 0
-                for model_id in selected_models:
-                    for part_id in selected_parts:
-                        # Only create if not already exists (enforce only one checkpoint per model-part)
-                        if not model_checkpoint_tbl.objects.filter(model_id=model_id, part_id=part_id).exists():
-                            # Find the oldest checkpoint/image for this part from any previous model_checkpoint_tbl row
-                            previous_cp = model_checkpoint_tbl.objects.filter(part_id=part_id).order_by('log_date', 'pk').first()
-                            checkpoint_val = previous_cp.checkpoint if previous_cp and previous_cp.checkpoint else ""
-                            image_val = previous_cp.image_path if previous_cp and previous_cp.image_path else None
-                            model_part = model_checkpoint_tbl.objects.create(
-                                model_id=model_id,
-                                part_id=part_id,
-                                platform_id=first_model.platform_id if first_model else None,
-                                checkpoint=checkpoint_val,
-                                image_path=image_val
-                            )
-                            ActionLog.objects.create(
-                                action="Add",
-                                table_name="model_checkpoint_tbl",
-                                data_id=model_part.pk,
-                                description=f"Connected model ID {model_id} with part ID {part_id}.",
-                            )
-                            created_count += 1
-                        else:
-                            # If already exists, skip creation (no duplicate allowed)
-                            continue
-                purge_table_connection()
-                if created_count == 0:
-                    msg = "All selected model-part connections already exist. No new connections created."
-                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                        return JsonResponse({'success': False, 'message': msg})
-                    else:
-                        messages.error(request, msg)
-                else:
-                    msg = f"{created_count} new model-part connections created successfully."
-                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                        return JsonResponse({'success': True, 'message': msg})
-                    else:
-                        messages.success(request, msg)
+                return JsonResponse({'success': False, 'message': 'Please select at least one model.'})
 
-                if selected_models:
-                    selected_model_id = selected_models[0]
-                    selected_model = model_code_tbl.objects.get(id=selected_model_id)
-                    selected_model_text = selected_model.model_code
-                    model_data = model_checkpoint_tbl.objects.filter(model_id=selected_model_id).select_related("model", "part")
-                    model_data = sorted(model_data, key=lambda x: x.part.part_no)
+            if not selected_parts:
+                return JsonResponse({'success': False, 'message': 'Please select at least one part.'})
+
+
+            def is_ferrule_part(part):
+                keywords = ['ferrule', 'ferrules', 'ferule', 'ferules']
+                text = f"{part.part_no} {part.part_name}".lower()
+                return any(k in text for k in keywords)
+
+
+            models_qs = model_code_tbl.objects.filter(id__in=selected_models)
+            parts_qs = part_tbl.objects.filter(id__in=selected_parts)
+
+            # 🔒 BLOCK ONLY ferrule parts when ferrule count = 0
+            blocked_models = []
+
+            for model in models_qs:
+                if model.no_of_ferrules == 0:
+                    for part in parts_qs:
+                        if is_ferrule_part(part):
+                            blocked_models.append(model.model_code)
+
+            if blocked_models:
+                return JsonResponse({
+                    'success': False,
+                    'message': (
+                        "Connection not allowed. Ferrule-related parts cannot be connected "
+                        f"to models with 0 ferrules. Models: {', '.join(set(blocked_models))}"
+                    )
+                }, status=400)
+
+            #  CREATE CONNECTIONS
+            created_count = 0
+            first_model = models_qs.first()
+
+            for model in models_qs:
+                for part in parts_qs:
+                    if not model_checkpoint_tbl.objects.filter(model=model, part=part).exists():
+
+                        prev = model_checkpoint_tbl.objects.filter(part=part).order_by('log_date', 'pk').first()
+
+                        obj = model_checkpoint_tbl.objects.create(
+                            model=model,
+                            part=part,
+                            platform=first_model.platform if first_model else None,
+                            checkpoint=prev.checkpoint if prev else "",
+                            image_path=prev.image_path if prev else None
+                        )
+
+                        ActionLog.objects.create(
+                            action="Add",
+                            table_name="model_checkpoint_tbl",
+                            data_id=obj.pk,
+                            description=f"Connected model {model.model_code} with part {part.part_no}"
+                        )
+
+                        created_count += 1
+
+            purge_table_connection()
+
+            if created_count == 0:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'All selected model-part connections already exist.'
+                })
+
+            return JsonResponse({
+                'success': True,
+                'message': f'{created_count} new model-part connections created successfully.'
+            })
 
     else:
+        # SESSION fallback
         selected_model_id = request.session.get("selected_model_id")
         if selected_model_id:
             try:
@@ -1939,16 +1954,15 @@ def model_part_selection(request):
                 selected_model_id = None
 
     return render(request, "connections.html", {
-    "platforms": platforms,
-    "selected_platform": selected_platform,
-    "models": models,
-    "parts": parts,
-    "selected_model_text": selected_model_text,
-    "connections": model_data,
-    "selected_model_id": selected_model_id,
-    "is_view_operation": is_view_operation,
-})
-
+        "platforms": platforms,
+        "selected_platform": selected_platform,
+        "models": models,
+        "parts": parts,
+        "selected_model_text": selected_model_text,
+        "connections": model_data,
+        "selected_model_id": selected_model_id,
+        "is_view_operation": is_view_operation,
+    })
 
 @login_required
 def get_models_parts_for_platform(request):
@@ -6625,3 +6639,25 @@ def delete_ratio(request, pk):
         except Exception as e:
             messages.error(request, f"Error deleting Ratio: {str(e)}")
     return redirect('show_all_parts')
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+
+@require_http_methods(["GET"])
+def get_model_ferrule_count(request):
+    """Return the number of ferrules for a given model"""
+    model_id = request.GET.get('model_id')
+    
+    if not model_id:
+        return JsonResponse({'ferrule_count': 0})
+    
+    try:
+        # Adjust 'Model' to your actual model name
+        model = model_code_tbl.objects.get(id=model_id)
+        ferrule_count = model.no_of_ferrules if hasattr(model, 'no_of_ferrules') else 0
+        return JsonResponse({'ferrule_count': int(ferrule_count)})
+    except model_code_tbl.DoesNotExist:
+        return JsonResponse({'ferrule_count': 0})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

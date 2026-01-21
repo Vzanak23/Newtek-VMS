@@ -132,10 +132,19 @@ class MasterCodeForm(forms.ModelForm):
         return model_code
 
     def clean_no_of_ferrules(self):
-        no_of_ferrules = self.cleaned_data.get("no_of_ferrules")
-        if no_of_ferrules is not None and no_of_ferrules != '' and int(no_of_ferrules) < 0:
-            raise forms.ValidationError("Number of ferrules cannot be negative.")
-        return no_of_ferrules
+     value = self.cleaned_data.get("no_of_ferrules")
+
+     if value in (None, ''):
+        raise forms.ValidationError("Please select number of ferrules.")
+
+     value = int(value)
+
+     if value < 0 or value > 6:
+        raise forms.ValidationError("Number of ferrules must be between 0 and 6.")
+
+     return value
+
+
 
     def clean_ferrule_direction(self):
         """

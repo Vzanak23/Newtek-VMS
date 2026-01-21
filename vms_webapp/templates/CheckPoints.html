@@ -253,7 +253,9 @@
 {% endblock %}
 {% block content %}
 <div class="top-controls sameline" style="display: flex; align-items: center; gap: 30px; margin-bottom: 20px;">
+{% if user.is_superuser %}
     <button id="addButton">+</button>
+{% endif %}
     <form method="get" id="platform-model-form" style="display: flex; align-items: center; gap: 20px; margin-bottom: 0;">
         <label for="platform-select" style="margin-bottom: 0; font-weight: 500;">Client:</label>
         <select name="platform_id" id="platform-select" class="form-control" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; min-width: 160px;" onchange="document.getElementById('platform-model-form').submit();">
@@ -1033,6 +1035,146 @@ document.addEventListener('DOMContentLoaded', function () {
         modelDropdown.addEventListener('change', updateModelDescription);
         updateModelDescription(); // Initial fill
     });
+    // Add this script to your checkpoint template (document 2)
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modelDropdown = document.getElementById('model_id');
+    const partDropdown = document.getElementById('part_dropdown');
+    const addForm = document.getElementById('addForm');
+    
+    // Store ferrule count for selected model
+    let currentModelFerruleCount = 0;
+    
+    // Function to get ferrule count for selected model
+    function updateFerruleCount() {
+        const selectedModelId = modelDropdown.value;
+        if (!selectedModelId) {
+            currentModelFerruleCount = 0;
+            return;
+        }
+        
+        // Fetch ferrule count via AJAX
+        fetch(`/get_model_ferrule_count/?model_id=${selectedModelId}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            currentModelFerruleCount = data.ferrule_count || 0;
+            validatePartSelection();
+        })
+        .catch(error => {
+            console.error('Error fetching ferrule count:', error);
+        });
+    }
+    
+    // Function to check if part name contains ferrule-related keywords
+    function isFerruleRelatedPart(partText) {
+        if (!partText) return false;
+        const lowerText = partText.toLowerCase();
+        const ferruleKeywords = ['ferrule', 'ferrules', 'ferule', 'ferules'];
+        return ferruleKeywords.some(keyword => lowerText.includes(keyword));
+    }
+    
+    // Function to validate part selection
+    function validatePartSelection() {
+        const selectedOption = partDropdown.options[partDropdown.selectedIndex];
+        if (!selectedOption || !selectedOption.value) return true;
+        
+        const partText = selectedOption.textContent || selectedOption.text;
+        
+        // Check if model has 0 ferrules and selected part is ferrule-related
+        if (currentModelFerruleCount === 0 && isFerruleRelatedPart(partText)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Selection',
+                text: 'Cannot select ferrule-related parts for a model with 0 ferrule connections.',
+                confirmButtonColor: '#062A63'
+            });
+            
+            // Reset part dropdown
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('#part_dropdown').val('').trigger('change');
+            } else {
+                partDropdown.value = '';
+            }
+            return false;
+        }
+        return true;
+    }
+    
+    // Attach event listeners
+    if (modelDropdown) {
+        modelDropdown.addEventListener('change', function() {
+            updateFerruleCount();
+            // Clear part selection when model changes
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('#part_dropdown').val('').trigger('change');
+            } else {
+                partDropdown.value = '';
+            }
+        });
+    }
+    
+    if (partDropdown) {
+        partDropdown.addEventListener('change', function() {
+            validatePartSelection();
+        });
+        
+        // For Select2 dropdown
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('#part_dropdown').on('select2:select', function(e) {
+                setTimeout(() => validatePartSelection(), 100);
+            });
+        }
+    }
+    
+    // Form submission validation
+    if (addForm) {
+        addForm.addEventListener('submit', function(e) {
+            const selectedOption = partDropdown.options[partDropdown.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                const partText = selectedOption.textContent || selectedOption.text;
+                
+                if (currentModelFerruleCount === 0 && isFerruleRelatedPart(partText)) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Cannot create checkpoint with ferrule-related parts for a model with 0 ferrule connections.',
+                        confirmButtonColor: '#062A63'
+                    });
+                    return false;
+                }
+            }
+        });
+    }
+    
+    // Initialize on page load if model is already selected
+    if (modelDropdown && modelDropdown.value) {
+        updateFerruleCount();
+    }
+});
+
+// Visual indicator - add warning icon next to ferrule-related parts
+document.addEventListener('DOMContentLoaded', function() {
+    const partDropdown = document.getElementById('part_dropdown');
+    if (partDropdown && typeof $ !== 'undefined' && $.fn.select2) {
+        $('#part_dropdown').on('select2:open', function() {
+            setTimeout(() => {
+                const options = document.querySelectorAll('.select2-results__option');
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    const ferruleKeywords = ['ferrule', 'ferrules', 'ferule', 'ferules'];
+                    if (ferruleKeywords.some(keyword => text.includes(keyword))) {
+                        option.style.color = '#dc3545';
+                        option.title = 'Ferrule-related part';
+                    }
+                });
+            }, 50);
+        });
+    }
+});
+
 </script>
 
 {% endblock %}

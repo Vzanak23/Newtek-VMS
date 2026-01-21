@@ -237,7 +237,9 @@
 {% block content %}
 <div class="sameline" style="position: relative; background-color: white; padding: 10px;">
     <div style="display: flex; align-items: center;">
-        <button id="addButton">+</button>
+{% if user.is_superuser %}
+<button id="addButton">+</button>
+{% endif %}
     </div>
 
     <div class="select-platform" style="
@@ -273,6 +275,7 @@
 <div id="platformError" style="color: red; font-size: 14px; margin-left: 20px;"></div>
 
 <div id="myModal" class="modal">
+
     <div class="modal-content">
         <span class="close">&times;</span>
         <h2 class="h" style="text-align: center; color: #062A63;">Add Part</h2>
@@ -427,6 +430,9 @@
         {% endfor %}
     ];
 
+    // Add this variable at the top to track superuser status
+    const isSuperuser = {{ user.is_superuser|yesno:"true,false" }};
+
     // Helper function to get CSRF token
     function getCookie(name) {
         let cookieValue = null;
@@ -455,7 +461,7 @@
         });
     }
 
-    // Create ferrule dropdowns based on number selected
+    // Create ferrule dropdowns based on number selected (RESTRICTED TO 0-6)
     function createFerruleDropdowns(numberOfFerrules) {
         const container = document.getElementById('ferruleDirectionContainer');
         container.innerHTML = '';
@@ -467,6 +473,18 @@
         }
         
         const numFerrules = parseInt(numberOfFerrules);
+        
+        // Validate ferrule count is between 0 and 6
+        if (numFerrules < 0 || numFerrules > 6) {
+            container.innerHTML = '<p style="color: red; font-size: 14px;">Number of ferrules must be between 0 and 6</p>';
+            document.getElementById('ferruleDirectionValue').value = '';
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Input',
+                text: 'Number of ferrules must be between 0 and 6'
+            });
+            return;
+        }
         
         for (let i = 1; i <= numFerrules; i++) {
             const wrapper = document.createElement('div');
@@ -539,14 +557,9 @@
 
         updateFerruleDirectionValue();
     }
-    if (!window.location.search.includes("q=")) {
-    fetchConnectedModels(platformDropdown.value);
-}
 
-
-    // Fetch connected models based on platform
+    // Fetch connected models
     function fetchConnectedModels(platformId) {
-        // Update search form platform_id when platform changes
         searchPlatformId.value = platformId;
         
         fetch(`/get_connected_models/?platform_id=${platformId}`)
@@ -556,12 +569,30 @@
                 modelTableBody.innerHTML = '';
 
                 if (data.length === 0) {
+                    const colspan = isSuperuser ? "10" : "8";
                     modelTableBody.innerHTML = `
                     <tr>
-                        <td colspan="10" style="text-align: center;">No data available.</td>
+                        <td colspan="${colspan}" style="text-align: center;">No data available.</td>
                     </tr>`;
                 } else {
                     data.forEach((model, index) => {
+                        let editDeleteCols = '';
+                        if (isSuperuser) {
+                            editDeleteCols = `
+                                <td style="text-align: center;">
+                                    <button type="button" onclick="editModel(${model.pk})" 
+                                        style="background:none; border:none; color:#062A63; font-size:20px; cursor:pointer;">
+                                        Edit
+                                    </button>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button type="button" onclick="deleteModel(${model.pk})" 
+                                        style="background:none; border:none; color:red; font-size:20px; cursor:pointer;">
+                                        Delete
+                                    </button>
+                                </td>`;
+                        }
+
                         const sanitizedRow = `
                         <tr>
                             <td>${index + 1}</td>
@@ -572,18 +603,7 @@
                             <td>${DOMPurify.sanitize(model.label_type)}</td>
                             <td>${model.no_of_ferrules}</td>
                             <td>${DOMPurify.sanitize(model.ferrule_direction)}</td>
-                            <td style="text-align: center;">
-                                <button type="button" onclick="editModel(${model.pk})" 
-                                    style="background:none; border:none; color:#062A63; font-size:20px; cursor:pointer;">
-                                    Edit
-                                </button>
-                            </td>
-                            <td style="text-align: center;">
-                                <button type="button" onclick="deleteModel(${model.pk})" 
-                                    style="background:none; border:none; color:red; font-size:20px; cursor:pointer;">
-                                    Delete
-                                </button>
-                            </td>
+                            ${editDeleteCols}
                         </tr>`;
                         modelTableBody.insertAdjacentHTML('beforeend', sanitizedRow);
                     });
@@ -591,42 +611,88 @@
             })
             .catch(error => {
                 console.error('Error fetching models:', error);
+                showToast('Failed to load data', 'error');
             });
     }
 
-    // Edit model function
+    // Perform search
+    function performSearch(query, platformId) {
+        fetch(`/model?platform_id=${encodeURIComponent(platformId)}&q=${encodeURIComponent(query)}&ajax=1`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.querySelector('#modelTableBody');
+            if (newTableBody) {
+                document.getElementById('modelTableBody').innerHTML = newTableBody.innerHTML;
+            } else {
+                fetchConnectedModels(platformId);
+            }
+        })
+        .catch(err => {
+            console.error('Search failed:', err);
+            showToast('Search failed', 'error');
+        });
+    }
+
+    // Edit model
     function editModel(pk) {
-        fetch(`/model_edit/${pk}/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('id_model_code').value = data.model_code;
-                    document.getElementById('id_model_description').value = data.model_description;
-                    document.getElementById('id_ratio').value = data.ratio;
-                    document.getElementById('id_burden').value = data.burden;
-                    document.getElementById('id_label_type').value = data.label_type;
-                    document.getElementById('id_no_of_ferrules').value = data.no_of_ferrules;
-                    document.getElementById('platformId').value = data.platform_id;
+        if (!isSuperuser) {
+            showToast('You do not have permission to edit', 'error');
+            return;
+        }
 
-                    populateFerruleDropdownsForEdit(data.no_of_ferrules, data.ferrule_direction);
+        fetch(`/model_edit/${pk}/`, { 
+            headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                document.getElementById('id_model_code').value = data.model_code || '';
+                document.getElementById('id_model_description').value = data.model_description || '';
+                document.getElementById('id_ratio').value = data.ratio || '';
+                document.getElementById('id_burden').value = data.burden || '';
+                document.getElementById('id_label_type').value = data.label_type || '';
+                document.getElementById('platformId').value = data.platform_id || '';
 
-                    document.getElementById('modelCodeError').textContent = '';
-                    document.querySelector('.modal-content h2.h').textContent = 'Edit Part';
-                    document.getElementById('addForm').action = `/model_edit/${pk}/`;
-                    document.querySelector('input[name="record_id"]').value = pk;
-                    modal.style.display = 'block';
-                } else {
-                    showToast('Failed to load part data', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching model data:', error);
-                showToast('Failed to load part data', 'error');
-            });
+                // ✅ FIX FOR NUMBER OF FERRULES (Select2)
+                const ferrulesSelect = $('#id_no_of_ferrules');
+                ferrulesSelect
+                    .val(String(data.no_of_ferrules ?? ''))
+                    .trigger('change');
+
+
+                populateFerruleDropdownsForEdit(data.no_of_ferrules, data.ferrule_direction);
+
+                document.getElementById('modelCodeError').textContent = '';
+                document.querySelector('.modal-content h2.h').textContent = 'Edit Part';
+                document.getElementById('addForm').action = `/model_edit/${pk}/`;
+                document.querySelector('input[name="record_id"]').value = pk;
+                modal.style.display = 'block';
+            } else {
+                showToast(data.error || 'Failed to load part data', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching model data:', error);
+            showToast('Failed to load part data', 'error');
+        });
     }
 
-    // Delete model function
+    // Delete model
     function deleteModel(pk) {
+        if (!isSuperuser) {
+            showToast('You do not have permission to delete', 'error');
+            return;
+        }
+
         Swal.fire({
             title: 'Delete this part?',
             text: 'This action cannot be undone!',
@@ -645,7 +711,12 @@
                         'X-CSRFToken': getCookie('csrftoken')
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         fetchConnectedModels(platformDropdown.value);
@@ -701,35 +772,37 @@
         modal.style.display = 'none';
     });
 
-    addButton.addEventListener('click', () => {
-        const platformError = document.getElementById('platformError');
-        if (platformDropdown.value === "") {
-            alert('Please select a platform first.');
-            return;
-        }
-        platformError.textContent = "";
-        platformId.value = platformDropdown.value;
-        
-        // Clear all form fields
-        document.getElementById('id_model_code').value = '';
-        document.getElementById('id_model_description').value = '';
-        document.getElementById('id_ratio').selectedIndex = 0;
-        document.getElementById('id_burden').selectedIndex = 0;
-        document.getElementById('id_label_type').selectedIndex = 0;
-        document.getElementById('id_no_of_ferrules').selectedIndex = 0;
-        
-        // Reset ferrule direction container
-        const container = document.getElementById('ferruleDirectionContainer');
-        container.innerHTML = '<p style="color: #666; font-size: 14px;">Please select number of ferrules first</p>';
-        document.getElementById('ferruleDirectionValue').value = '';
-        
-        document.getElementById('modelCodeError').textContent = '';
-        document.querySelector('.modal-content h2.h').textContent = 'Add Part';
-        document.getElementById('addForm').action = "{% url 'model' %}";
-        document.querySelector('input[name="record_id"]').value = '';
-        document.getElementById('addForm').querySelector('button.edit').disabled = false;
-        modal.style.display = 'block';
-    });
+    if (addButton) {
+        addButton.addEventListener('click', () => {
+            const platformError = document.getElementById('platformError');
+            if (platformDropdown.value === "") {
+                alert('Please select a platform first.');
+                return;
+            }
+            platformError.textContent = "";
+            platformId.value = platformDropdown.value;
+            
+            // Clear all form fields
+            document.getElementById('id_model_code').value = '';
+            document.getElementById('id_model_description').value = '';
+            document.getElementById('id_ratio').selectedIndex = 0;
+            document.getElementById('id_burden').selectedIndex = 0;
+            document.getElementById('id_label_type').selectedIndex = 0;
+            document.getElementById('id_no_of_ferrules').selectedIndex = 0;
+            
+            // Reset ferrule direction container
+            const container = document.getElementById('ferruleDirectionContainer');
+            container.innerHTML = '<p style="color: #666; font-size: 14px;">Please select number of ferrules first</p>';
+            document.getElementById('ferruleDirectionValue').value = '';
+            
+            document.getElementById('modelCodeError').textContent = '';
+            document.querySelector('.modal-content h2.h').textContent = 'Add Part';
+            document.getElementById('addForm').action = "{% url 'model' %}";
+            document.querySelector('input[name="record_id"]').value = '';
+            document.getElementById('addForm').querySelector('button.edit').disabled = false;
+            modal.style.display = 'block';
+        });
+    }
 
     cancelBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -742,24 +815,8 @@
         sessionStorage.setItem('selectedPlatformId', this.value);
         platformId.value = this.value;
         searchPlatformId.value = this.value;
+        fetchConnectedModels(this.value);
     });
-
-    // AJAX search without page reload
-    function performSearch(query, platformId) {
-        fetch(`/model?platform_id=${encodeURIComponent(platformId)}&q=${encodeURIComponent(query)}&ajax=1`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newTableBody = doc.querySelector('#modelTableBody');
-            if (newTableBody) {
-                document.getElementById('modelTableBody').innerHTML = newTableBody.innerHTML;
-            }
-        })
-        .catch(err => console.error('Search failed:', err));
-    }
 
     // Clear search functionality via AJAX
     document.getElementById("clearSearch").addEventListener("click", function (e) {
@@ -778,18 +835,16 @@
 
     // Initialize from session storage and clear search on page load
     const selectedPlatformId = DOMPurify.sanitize(sessionStorage.getItem('selectedPlatformId'));
-    if (selectedPlatformId) {
+    if (selectedPlatformId && !window.location.search.includes("q=")) {
         platformDropdown.value = selectedPlatformId;
         searchPlatformId.value = selectedPlatformId;
-        // Clear search input on page load
         document.getElementById("searchInput").value = "";
         fetchConnectedModels(selectedPlatformId);
     } else {
-        // Also clear search on load even if no session stored
         document.getElementById("searchInput").value = "";
     }
 
-    // Error popup auto-hide
+    // DOMContentLoaded events
     document.addEventListener("DOMContentLoaded", function () {
         var errorPopup = document.getElementById('error-popup');
         if (errorPopup) {
@@ -801,17 +856,14 @@
         // Number of ferrules change handler
         const noOfFerrulesSelect = document.getElementById('id_no_of_ferrules');
         if (noOfFerrulesSelect) {
-            // 'input' event fires immediately when value changes
             noOfFerrulesSelect.addEventListener('input', function() {
                 createFerruleDropdowns(this.value);
             });
             
-            // 'change' event as backup
             noOfFerrulesSelect.addEventListener('change', function() {
                 createFerruleDropdowns(this.value);
             });
             
-            // 'click' event for immediate response on selection
             noOfFerrulesSelect.addEventListener('click', function() {
                 setTimeout(() => {
                     createFerruleDropdowns(this.value);
@@ -819,12 +871,23 @@
             });
         }
 
-        // Form validation
+        // Form validation with ferrule count check
         const addFormElement = document.getElementById('addForm');
         if (addFormElement) {
             addFormElement.addEventListener('submit', function(e) {
                 const numFerrules = document.getElementById('id_no_of_ferrules').value;
                 const ferruleDirectionValue = document.getElementById('ferruleDirectionValue').value;
+                
+                // Validate ferrule count range (0-6)
+                if (numFerrules && (parseInt(numFerrules) < 0 || parseInt(numFerrules) > 6)) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Number of ferrules must be between 0 and 6'
+                    });
+                    return false;
+                }
                 
                 if (numFerrules && numFerrules !== '0') {
                     const selectedDirections = ferruleDirectionValue ? ferruleDirectionValue.split(',').filter(d => d.trim() !== '') : [];

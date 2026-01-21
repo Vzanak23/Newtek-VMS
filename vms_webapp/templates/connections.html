@@ -411,26 +411,21 @@
 {% block content %}
 <div class="select-platform" style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 20px;">
     <form id="filterForm" method="get" action="{% url 'model_part_selection' %}">
-  <label for="platformDropdown" style="font-weight: 700; font-size: 1.3rem;">Select Client:</label>
-  <select id="platformDropdown" name="platform_id" onchange="this.form.submit()">
-        <option value="">Select a Client</option>
-        {% for platform in platforms %}
-            <option value="{{ platform.id }}" {% if platform_id and platform_id|stringformat:"s" == platform.id|stringformat:"s" %}selected{% elif selected_platform and selected_platform.id|stringformat:"s" == platform.id|stringformat:"s" %}selected{% endif %}>
-                {{ platform.platform }}
-            </option>
-        {% endfor %}
-  </select>
-</form>
+        <label for="platformDropdown" style="font-weight: 700; font-size: 1.3rem;">Select Client:</label>
+        <select id="platformDropdown" name="platform_id" onchange="this.form.submit()">
+            <option value="">Select a Client</option>
+            {% for platform in platforms %}
+                <option value="{{ platform.id }}" {% if platform_id and platform_id|stringformat:"s" == platform.id|stringformat:"s" %}selected{% elif selected_platform and selected_platform.id|stringformat:"s" == platform.id|stringformat:"s" %}selected{% endif %}>
+                    {{ platform.platform }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
 </div>
-
 
 <div style="margin-top: 2rem; display: flex; justify-content: center; align-items: center;">
-  <button onclick="checkPlatformAndShow('connectSection')" class="dropbtn" style="margin: 1rem;">🔗 Connect Mode</button>
-  <button onclick="checkPlatformAndShow('copySection')" class="dropbtn" style="margin: 1rem;">📋 Copy Mode</button>
-  <!-- <button onclick="checkPlatformAndShow('viewSection')" class="dropbtn" style="margin: 1rem;">👁️ View Mode</button> -->
-</div>
-
-
+    <button onclick="checkPlatformAndShow('connectSection')" class="dropbtn" style="margin: 1rem;">🔗 Connect Mode</button>
+    <button onclick="checkPlatformAndShow('copySection')" class="dropbtn" style="margin: 1rem;">📋 Copy Mode</button>
 </div>
 
 <div id="myModal" class="modal">
@@ -439,141 +434,52 @@
         <img class="modal-image" id="modal-image" src="" alt="Part Image">
     </div>
 </div>
-<!-- Container -->
-<div class="container" style="margin-top: 30px; display: flex ; align-items: center; flex-direction: column;">
 
-    <!--  Connect Models to Parts -->
+<div class="container" style="margin-top: 30px; display: flex; align-items: center; flex-direction: column;">
+
+    <!-- Connect Models to Parts -->
     <div id="connectSection" style="display: none; align-items: center; margin-bottom: 0.1rem;">
         <h4 style="margin: 0 20px 0 0; font-weight: bold;">Connect :</h4>
         <form id="modelPartForm" method="post" action="{% url 'model_part_selection' %}" style="margin: 0;">
             {% csrf_token %}
             <div class="select-platform" style="display: flex; gap: 10px; flex-wrap: wrap;">
 
-
                 <!-- To Models -->
-                    <div class="dropdown to-models-dropdown">
-                        <button type="button" class="dropbtn">To Models</button>
-                        <div class="dropdown-content">
-                            <input type="text" id="modelSearch" placeholder="Search models...">
-                            <label><input type="checkbox" id="selectModelAll"> Select/Deselect All</label>
-                            {% for model in models %}
-                            <label>
-                                <input type="checkbox" name="selectedModels" value="{{ model.id }}">
-                                {{ model.model_code }}
-                            </label>
-                            {% endfor %}
-                        </div>
+                <div class="dropdown to-models-dropdown">
+                    <button type="button" class="dropbtn">To Models</button>
+                    <div class="dropdown-content">
+                        <input type="text" id="modelSearch" placeholder="Search models...">
+                        <label><input type="checkbox" id="selectModelAll"> Select/Deselect All</label>
+                        {% for model in models %}
+                        <label>
+                            <input type="checkbox" name="selectedModels" value="{{ model.id }}">
+                            {{ model.model_code }}
+                        </label>
+                        {% endfor %}
                     </div>
-
-                    <!-- Parts -->
-                    <div class="dropdown select-parts-dropdown">
-                        <button type="button" class="dropbtn">Select Ferrules</button>
-                        <div class="dropdown-content">
-                            <input type="text" id="partSearch" placeholder="Search parts...">
-                            <label><input type="checkbox" id="selectPartAll"> Select/Deselect All</label>
-                            {% for part in parts %}
-                            <label>
-                                <input type="checkbox" name="selectedParts" value="{{ part.id }}">
-                                {{ part.part_name }}
-                            </label>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <button type="submit" class="dropbtn ">Connect</button>
-                    <script>
-// Show SweetAlert success after bulk delete
-document.addEventListener('DOMContentLoaded', function () {
-    var bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-    var bulkDeleteForm = bulkDeleteBtn ? bulkDeleteBtn.closest('form') : null;
-    if (bulkDeleteBtn && bulkDeleteForm) {
-        bulkDeleteBtn.addEventListener('click', function (event) {
-            event.preventDefault();
-            var checkedBoxes = bulkDeleteForm.querySelectorAll('.row-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    text: 'Please select at least one connection to delete.'
-                });
-                return;
-            }
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'Selected connections will be permanently deleted.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete them!'
-            }).then(function (result) {
-                if (result.isConfirmed) {
-                    var formData = new FormData(bulkDeleteForm);
-                    fetch(bulkDeleteForm.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            Swal.fire({
-                                icon: 'success',
-                                text: data.message || 'Selected connections deleted.'
-                            });
-                            checkedBoxes.forEach(cb => {
-                                var row = cb.closest('tr');
-                                if (row) row.remove();
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                text: data.message || 'Bulk delete failed.'
-                            });
-                        }
-                    })
-                    .catch(() => {
-                        Swal.fire({
-                            icon: 'error',
-                            text: 'An error occurred while deleting.'
-                        });
-                    });
-                }
-            });
-        });
-    }
-});
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.remove-button').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            event.preventDefault();
-            var form = this.closest('form');
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'This connection will be permanently deleted.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then(function (result) {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
-        });
-    });
-});
-                        
-                    </script>
                 </div>
+
+                <!-- Parts -->
+                <div class="dropdown select-parts-dropdown">
+                    <button type="button" class="dropbtn">Select Ferrules</button>
+                    <div class="dropdown-content">
+                        <input type="text" id="partSearch" placeholder="Search parts...">
+                        <label><input type="checkbox" id="selectPartAll"> Select/Deselect All</label>
+                        {% for part in parts %}
+                        <label>
+                            <input type="checkbox" name="selectedParts" value="{{ part.id }}" data-part-name="{{ part.part_name }}">
+                            {{ part.part_name }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <button type="submit" class="dropbtn">Connect</button>
+            </div>
         </form>
     </div>
 
-
-    <!--  Copy Model Data -->
-    <div id="copySection" style="display: none; align-items: center; margin-bottom: 0.1rem; ">
+    <!-- Copy Model Data -->
+    <div id="copySection" style="display: none; align-items: center; margin-bottom: 0.1rem;">
         <h4 style="margin: -10px 20px 0 0; font-weight: bold;">Copy :</h4>
         <form id="copyForm" method="post" action="{% url 'copy_model_data' %}">
             {% csrf_token %}
@@ -607,353 +513,225 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </div>
 
-                <button id="copyButton" type="submit" class="dropbtn">Copy
-                    Data</button>
+                <button id="copyButton" type="submit" class="dropbtn">Copy Data</button>
 
             </div>
         </form>
     </div>
-    <script>
-        
 
-    </script>
-
-    <!--  View Connected Parts -->
+    <!-- View Connected Parts -->
     <div id="viewSection" style="display: none; align-items: center; margin-bottom: 0.1rem; margin-right: 7rem;">
         <h4 style="margin: 0 20px 0 0; font-weight: bold;">View :</h4>
         <form id="viewForm" method="post" action="{% url 'model_part_selection' %}">
             {% csrf_token %}
             <div class="select-platform" style="display: flex; gap: 10px; flex-wrap: wrap;">
-
-                
                 <div class="dropdown">
-  <button type="button" id="selectModelsButton" class="dropbtn">Select Parts</button>
-  <div class="dropdown-content" id="selectModelsContent" style="display:none;">
-    <input type="text" id="viewModelSearch" placeholder="Search model...">
-    {% for model in models %}
-    <label>
-      <input type="radio" name="selectedModelView" value="{{ model.id }}" {% if selected_model_id == model.id|stringformat:"s" %}checked{% endif %}>
-      {{ model.model_code }}
-    </label>
-    {% endfor %}
-  </div>
-</div>
+                    <button type="button" id="selectModelsButton" class="dropbtn">Select Parts</button>
+                    <div class="dropdown-content" id="selectModelsContent" style="display:none;">
+                        <input type="text" id="viewModelSearch" placeholder="Search model...">
+                        {% for model in models %}
+                        <label>
+                            <input type="radio" name="selectedModelView" value="{{ model.id }}" {% if selected_model_id == model.id|stringformat:"s" %}checked{% endif %}>
+                            {{ model.model_code }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
 
                 <button type="submit" name="view_button" value="view" class="dropbtn">View</button>
-
             </div>
         </form>
     </div>
 
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-  const platformSelect = document.getElementById('platformDropdown');
-  const copyForm = document.getElementById('copyForm');
-  const copyButton = document.getElementById('copyButton');
-  const sourceModelSelect = document.getElementById('sourceModel');
-  const toModelsDropdownContent = copyForm.querySelector('.dropdown-content');
-  const toModelsCheckboxes = copyForm.querySelectorAll('input[name="targetModels"]');
-
-  
-  function updateCopySectionState() {
-    const platformSelected = platformSelect.value !== '';
-
-    sourceModelSelect.disabled = !platformSelected;
+// Ferrule validation logic
+document.addEventListener('DOMContentLoaded', function() {
+    const modelPartForm = document.getElementById('modelPartForm');
+    const partCheckboxes = document.querySelectorAll('input[name="selectedParts"]');
+    const modelCheckboxes = document.querySelectorAll('input[name="selectedModels"]');
     
-    toModelsCheckboxes.forEach(cb => cb.disabled = !platformSelected);
-  
-    copyButton.disabled = !platformSelected;
-
+    // Store ferrule counts for selected models
+    let modelFerruleCounts = {};
     
-    if (!platformSelected) {
-      toModelsDropdownContent.style.display = 'none';
-    }
-  }
-
-  updateCopySectionState();
-
-  platformSelect.addEventListener('change', () => {
-    updateCopySectionState();
-  });
-
-  
-  const toModelsDropdownBtn = copyForm.querySelector('.dropdown > button.dropbtn');
-  toModelsDropdownBtn.addEventListener('click', (e) => {
-    if (!platformSelect.value) {
-      alert('Please select a Client first.');
-      e.stopPropagation();
-      e.preventDefault();
-      return;
+    // Function to check if part name contains ferrule-related keywords
+    function isFerruleRelatedPart(partText) {
+        if (!partText) return false;
+        const lowerText = partText.toLowerCase();
+        const ferruleKeywords = ['ferrule', 'ferrules', 'ferule', 'ferules'];
+        return ferruleKeywords.some(keyword => lowerText.includes(keyword));
     }
     
-    toModelsDropdownContent.style.display = toModelsDropdownContent.style.display === 'block' ? 'none' : 'block';
-  });
+    // Function to get ferrule counts for multiple models
+    function updateFerruleCounts(modelIds) {
+        modelFerruleCounts = {};
 
-    copyForm.addEventListener('submit', function (event) {
-        if (!platformSelect.value) {
-            alert('Please select a Client first.');
-            event.preventDefault();
-            return;
+        if (!modelIds || modelIds.length === 0) {
+            return Promise.resolve();
         }
 
-        if (!sourceModelSelect.value) {
-            // alert('Please select a From Model.');
-            sourceModelSelect.focus();
-            event.preventDefault();
-            return;
-        }
+        // Fetch ferrule count PER model
+        return Promise.all(
+            modelIds.map(modelId =>
+                fetch(`/get_model_ferrule_count/?model_id=${modelId}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    modelFerruleCounts[modelId] = data.ferrule_count || 0;
+                })
+            )
+        );
+    }
 
-        const selectedTargets = [...copyForm.querySelectorAll('input[name="targetModels"]:checked')];
-        if (selectedTargets.length === 0) {
-            // alert('Please select at least one To Model.');
-            event.preventDefault();
-            return;
+    
+    // Function to validate connections
+    function validateConnections() {
+        const selectedModels = Array.from(modelCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+        
+        const selectedParts = Array.from(partCheckboxes)
+            .filter(cb => cb.checked);
+        
+        if (selectedModels.length === 0) {
+            return { valid: false, message: 'Please select at least one model.' };
         }
-
-        if (selectedTargets.some(cb => cb.value === sourceModelSelect.value)) {
-            alert('Source and target models cannot be the same.');
-            event.preventDefault();
-            return;
+        
+        if (selectedParts.length === 0) {
+            return { valid: false, message: 'Please select at least one part.' };
+        }
+        
+        // Check for ferrule-related parts
+        const ferruleParts = selectedParts.filter(cb => {
+            const partName = cb.getAttribute('data-part-name') || cb.parentElement.textContent.trim();
+            return isFerruleRelatedPart(partName);
+        });
+        
+        if (ferruleParts.length > 0) {
+            // Check if any selected model has 0 ferrules
+            const modelsWithZeroFerrules = selectedModels.filter(modelId => {
+                return modelFerruleCounts[modelId] === 0;
+            });
+            
+            if (modelsWithZeroFerrules.length > 0) {
+                const ferrulePartNames = ferruleParts.map(cb => {
+                    const partName = cb.getAttribute('data-part-name') || cb.parentElement.textContent.trim();
+                    return partName.split('(')[0].trim();
+                }).join(', ');
+                
+                return {
+                    valid: false,
+                    message: `Cannot create connection with ferrule-related parts (${ferrulePartNames}) for models having 0 ferrules. Please deselect either the ferrule parts or the models without ferrules.`
+                };
+            }
+        }
+        
+        return { valid: true };
+    }
+    
+    // Update ferrule counts when model selection changes
+    modelCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const selectedModels = Array.from(modelCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            
+            updateFerruleCounts(selectedModels);
+        });
+    });
+    
+    // Visual indicator for ferrule-related parts
+    partCheckboxes.forEach(checkbox => {
+        const label = checkbox.parentElement;
+        const partName = checkbox.getAttribute('data-part-name') || label.textContent.trim();
+        
+        if (isFerruleRelatedPart(partName)) {
+            label.style.color = '#dc3545';
+            label.title = 'Ferrule-related part - requires models with ferrule connections';
         }
     });
-});
-     $(document).ready(function() {
-    // Select2 initialization removed; should be handled in base.html
-    $('#platformDropdown').on('change', function() {
-        $('#filterForm').submit();
-    });
- // Auto-select first platform option if none is selected
-    var platformDropdown = $('#platformDropdown');
-    if (platformDropdown.val() === '') {
-        var firstOption = platformDropdown.find('option:not(:first)').first();
-        if (firstOption.length > 0) {
-            firstOption.prop('selected', true);
-            $('#filterForm').submit();
-            // platformDropdown.val(firstOption.val()).trigger('change');
-        }
-    }
-});
-
-
-    document.addEventListener('DOMContentLoaded', function () {
-  const platformSelect = document.getElementById('platformDropdown');
-
-  
-  const toModelsDropdownBtn = document.querySelector('.to-models-dropdown > button.dropbtn');
-  const toModelsDropdownContent = document.querySelector('.to-models-dropdown .dropdown-content');
-
-  const partsDropdownBtn = document.querySelector('.select-parts-dropdown > button.dropbtn');
-  const partsDropdownContent = document.querySelector('.select-parts-dropdown .dropdown-content');
-
-  const connectButton = document.querySelector('button[type="submit"].dropbtn');
-
-  
-  function setDropdownDisabled(content, disabled) {
-    if (disabled) {
-      content.classList.add('disabled');
-      content.querySelectorAll('input').forEach(input => input.disabled = true);
-    } else {
-      content.classList.remove('disabled');
-      content.querySelectorAll('input').forEach(input => input.disabled = false);
-    }
-  }
-
-  
-  function updateDropdownState() {
-    const platformSelected = platformSelect.value !== '';
-    setDropdownDisabled(toModelsDropdownContent, !platformSelected);
-    setDropdownDisabled(partsDropdownContent, !platformSelected);
-    connectButton.disabled = !platformSelected;
-  }
-
-  updateDropdownState();
-
-  
-  platformSelect.addEventListener('change', updateDropdownState);
-
-  
-  toModelsDropdownBtn.addEventListener('click', function (e) {
-    if (!platformSelect.value) {
-      alert('Please select a Client first.');
-      e.stopPropagation();
-    }
-  });
-
-  partsDropdownBtn.addEventListener('click', function (e) {
-    if (!platformSelect.value) {
-      alert('Please select a Client first.');
-      e.stopPropagation();
-    }
-  });
-});
-
-  document.getElementById('selectModelsButton').addEventListener('click', function (e) {
-    const platformSelect = document.getElementById('platformDropdown');
-    if (!platformSelect || !platformSelect.value) {
-      alert('Please select a platform first.');
-      platformSelect.focus();
-      
-      e.stopPropagation();
-      return;
-    }
     
-    const dropdownContent = document.getElementById('selectModelsContent');
-    dropdownContent.style.display = (dropdownContent.style.display === 'block') ? 'none' : 'block';
-  });
-
-  
-  window.addEventListener('click', function(e) {
-    const dropdownContent = document.getElementById('selectModelsContent');
-    const button = document.getElementById('selectModelsButton');
-    if (!button.contains(e.target) && !dropdownContent.contains(e.target)) {
-      dropdownContent.style.display = 'none';
-    }
-  });
-</script>
-    <!--  Control Buttons -->
-    
-    <!-- <div style="text-align:right; margin-bottom:10px; margin: 20px;">
-        <input type="text" id="tablePartNameSearch" placeholder="Search by Part Name" style="padding:6px; width:220px; border-radius:4px; border:1px solid #ccc;">
-    </div> -->
-   
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var searchInput = document.getElementById('tablePartNameSearch');
-        if (searchInput) {
-            searchInput.addEventListener('keyup', function () {
-                var filter = searchInput.value.toLowerCase();
-                document.querySelectorAll('.model-data-container tbody tr').forEach(function (row) {
-                    var partNameCell = row.children[2];
-                    if (partNameCell) {
-                        var partName = partNameCell.textContent.toLowerCase();
-                        row.style.display = partName.includes(filter) ? '' : 'none';
-                    }
+    // Form submission validation
+    if (modelPartForm) {
+        modelPartForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const validation = validateConnections();
+            
+            if (!validation.valid) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: validation.message,
+                    confirmButtonColor: '#062A63'
                 });
-            });
-        }
-    });
-    </script>
-
-    <!-- <div class="model-data-container mt-5">
-        <form method="post" action="{% url 'remove_model_part' %}">
-            {% csrf_token %}
-            <div class="model-data">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Part</th>
-                            <th>Model Description</th>
-                            <th>Part No</th>
-                            <th>Part Name</th>
-                            <th>Checkpoint</th>
-                            <th>Image</th>
-                            <th>Edit</th>
-                            <th>Delete</th>
-                            <th>
-                                <input type="checkbox" id="selectAllCheckbox" title="Select All">
-                                Select
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if model_data %}
-                        {% for data in model_data %}
-                        <tr>
-                            <td>{{ data.pk }}</td>
-                            <td>{{ data.model.model_code }}</td>
-                            <td>{{ data.model.model_description }}</td>
-                            <td>{{ data.part.part_no }}</td>
-                            <td>{{ data.part.part_name }}</td>
-                            <td>{{ data.checkpoint }}</td>
-                            <td>
-                                {% if data.image %}
-                                    <a class="view-button" href="#" data-url="{% url 'get_part_image' data.part_id %}"
-                                        style="color: #062A63; font-size: 20px; text-decoration: none;">View</a>
-                                {% else %}
-                                    No Image
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{% url 'Check_edit' data.pk %}" class="edit-button" style="color: #27ae60; font-size: 20px; text-decoration: none;">Edit</a>
-                            </td>
-                            <td>
-                                <form method="post" action="{% url 'remove_model_part' %}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="model_id" value="{{ data.model_id }}">
-                                    <input type="hidden" name="part_id" value="{{ data.part_id }}">
-                                    <button type="submit" class="remove-button"
-                                        style="background: none; border: none; color: red; font-size: 20px; cursor: pointer;">Delete</button>
-                                </form>
-                            </td>
-                            <td><input type="checkbox" class="row-checkbox" name="selected_ids" value="{{ data.model_id }}:{{ data.part_id }}"></td>
-                        </tr>
-                        {% endfor %}
-                        {% endif %}
-                        {% if not model_data and not copied_parts %}
-                        <tr>
-                            <td colspan="9">Data not available</td>
-                        </tr>
-                        {% endif %}
-                </table>
-            </div>
-            <button type="submit" id="bulkDeleteBtn" style="margin-top: 20px;" class="btn btn-danger">Delete Selected</button>
-        </form>
-        </div> -->
-    </div>
-
-    {% endblock %}
-
-
-    {% block extra_js %}
-        <script>
-    // Enable Select2 search for model dropdown in copy section
-    document.addEventListener('DOMContentLoaded', function () {
-        if (window.jQuery && window.jQuery.fn.select2) {
-            window.jQuery('#sourceModel').select2({
-                placeholder: 'From Model',
-                allowClear: true,
-                width: '180px'
-            });
-        }
-        var selectAllCheckbox = document.getElementById('selectAllCheckbox');
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', function () {
-                var checked = this.checked;
-                document.querySelectorAll('.row-checkbox').forEach(function (cb) {
-                    cb.checked = checked;
+                return false;
+            }
+            
+            // If validation passed, submit the form
+            const formData = new FormData(modelPartForm);
+            
+            fetch(modelPartForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        text: data.message || 'Models connected successfully.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    // Clear all checkboxes after successful connect
+                    modelPartForm.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                    modelFerruleCounts = {};
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        text: data.message || 'Failed to connect models and parts.',
+                        confirmButtonColor: '#062A63'
+                    });
+                }
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    text: 'An error occurred while connecting models and parts.',
+                    confirmButtonColor: '#062A63'
                 });
-            });
-        }
-    });
-    // ...existing code...
-    </script>
-    
-<script>
-     document.getElementById('platformDropdown').addEventListener('change', function () {
-    const platformId = this.value;
-    if (!platformId) {
-        // Clear models and parts lists if needed
-        return;
-    }
-    fetch(`/get_models_parts_for_platform?platform_id=${platformId}`)
-        .then(res => res.json())
-        .then(data => {
-            const modelsContainer = document.getElementById('modelsContainer'); // your container for models checkboxes
-            const partsContainer = document.getElementById('partsContainer'); // your container for parts checkboxes
-            modelsContainer.innerHTML = '';
-            partsContainer.innerHTML = '';
-            data.models.forEach(model => {
-                modelsContainer.innerHTML += `<label><input type="checkbox" name="models" value="${model.id}"> ${model.model_code}</label><br>`;
-            });
-            data.parts.forEach(part => {
-                partsContainer.innerHTML += `<label><input type="checkbox" name="parts" value="${part.id}"> ${part.part_no} - ${part.part_name}</label><br>`;
             });
         });
+    }
+    
+    // Initialize ferrule counts if models are already selected
+    const preSelectedModels = Array.from(modelCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+    
+    if (preSelectedModels.length > 0) {
+        updateFerruleCounts(preSelectedModels);
+    }
 });
 
+// Rest of your existing scripts
 function checkPlatformAndShow(sectionId) {
-    console.log('checkPlatformAndShow called with sectionId:', sectionId);
     const platformSelect = document.getElementById('platformDropdown');
     if (!platformSelect || !platformSelect.value) {
         alert('Please select a platform first.');
@@ -962,7 +740,6 @@ function checkPlatformAndShow(sectionId) {
         }
         return;
     }
-    // Hide error message when switching sections
     var errorDiv = document.getElementById('error-message');
     if (errorDiv) {
         errorDiv.style.display = 'none';
@@ -970,820 +747,273 @@ function checkPlatformAndShow(sectionId) {
     showSection(sectionId);
 }
 
-  // Assuming showSection is your existing function to display the section
-  function showSection(sectionId) {
+function showSection(sectionId) {
     const sections = ['connectSection', 'copySection', 'viewSection'];
     sections.forEach(id => {
-      document.getElementById(id).style.display = (id === sectionId) ? 'flex' : 'none';
+        document.getElementById(id).style.display = (id === sectionId) ? 'flex' : 'none';
     });
     localStorage.setItem('currentSection', sectionId);
-  }
-</script>
-    {% if messages %}
-    <!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
-    <script>
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const platformSelect = document.getElementById('platformDropdown');
+    const copyForm = document.getElementById('copyForm');
+    const copyButton = document.getElementById('copyButton');
+    const sourceModelSelect = document.getElementById('sourceModel');
+    const toModelsDropdownContent = copyForm ? copyForm.querySelector('.dropdown-content') : null;
+    const toModelsCheckboxes = copyForm ? copyForm.querySelectorAll('input[name="targetModels"]') : [];
+    
+    function updateCopySectionState() {
+        if (!platformSelect || !copyForm) return;
+        const platformSelected = platformSelect.value !== '';
         
-   
-        // Function to display flash messages using SweetAlert
-        function displayFlashMessages() {
-            {% for message in messages %}
-            Swal.fire({
-                icon: "{{ message.tags }}",
-                text: "{{ message }}"
-            });
-            {% endfor %}
+        if (sourceModelSelect) sourceModelSelect.disabled = !platformSelected;
+        toModelsCheckboxes.forEach(cb => cb.disabled = !platformSelected);
+        if (copyButton) copyButton.disabled = !platformSelected;
+        
+        if (!platformSelected && toModelsDropdownContent) {
+            toModelsDropdownContent.style.display = 'none';
         }
-
-        // Call the function to display flash messages after the page has loaded
-        window.addEventListener('DOMContentLoaded', function () {
-            displayFlashMessages();
-        });
-    </script>
-    {% endif %}
-    <script>
-        function scrollToTableTop() {
-            var tableContainer = document.querySelector('.model-data-container');
-            if (tableContainer) {
-                var tableTop = tableContainer.offsetTop;
-                window.scrollTo({
-                    top: tableTop,
-                    behavior: 'smooth'
-                });
-            }
-        }
-        // Attach event listener to the form submission
-        document.querySelectorAll('form').forEach(function (form) {
-            form.addEventListener('submit', function () {
-                // Scroll to the top of the table after the form submission
-                scrollToTableTop();
+    }
+    
+    if (platformSelect) {
+        updateCopySectionState();
+        platformSelect.addEventListener('change', updateCopySectionState);
+    }
+    
+    if (copyForm) {
+        const toModelsDropdownBtn = copyForm.querySelector('.dropdown > button.dropbtn');
+        if (toModelsDropdownBtn) {
+            toModelsDropdownBtn.addEventListener('click', (e) => {
+                if (!platformSelect.value) {
+                    alert('Please select a Client first.');
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return;
+                }
+                toModelsDropdownContent.style.display = toModelsDropdownContent.style.display === 'block' ? 'none' : 'block';
             });
-        });
-    </script>
-
-    <script>
-
-        // Add this script at the end of the HTML body or in an external JS file
-        document.addEventListener('DOMContentLoaded', function () {
-            var modal = document.getElementById("myModal");
-            var modalImg = document.getElementById("modal-image");
-            var span = document.getElementsByClassName("close")[0];
-            var closeModal = document.querySelector('.close');
-
-            if (closeModal) {
-                closeModal.addEventListener('click', () => {
-                    modal.style.display = 'none';
-                });
+        }
+        
+        copyForm.addEventListener('submit', function(event) {
+            if (!platformSelect.value) {
+                alert('Please select a Client first.');
+                event.preventDefault();
+                return;
             }
             
-            // Use event delegation on document for view buttons
-            document.addEventListener('click', function(event) {
-                if (event.target.classList.contains('view-button')) {
-                    event.preventDefault();
-                    var partId = event.target.getAttribute('data-part-id');
-                    var selectedViewModel = document.querySelector('input[name="selectedModelView"]:checked');
-
-                    if (!selectedViewModel) {
-                        alert('Please select a model first.');
-                        return;
-                    }
-
-                    fetch(`/get_part_image/${partId}/`)
-                        .then(response => {
-                            if (!response.ok) throw new Error('Network response was not ok');
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.image_url) {
-                                var modal = document.getElementById("myModal");
-                                var modalImg = document.getElementById("modal-image");
-                                modal.style.display = "flex";  // Use flex to center modal based on CSS
-                                modalImg.src = data.image_url;
-                            } else {
-                                alert('Image not found');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Fetch error:', error);
-                        });
-                }
-            });
-
-            // Close the modal when the user clicks on the close button
-            // span.onclick = function () {
-            //     modal.style.display = "none";
-            // }
-
-            // Close the modal when the user clicks anywhere outside of it
-            window.onclick = function (event) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
+            if (!sourceModelSelect.value) {
+                sourceModelSelect.focus();
+                event.preventDefault();
+                return;
             }
-
-            // Select/Deselect All functionality
-            document.getElementById("selectModelAll").addEventListener("change", function (event) {
-                var checkboxes = document.querySelectorAll('#modelDropdown input[type="checkbox"]');
-                checkboxes.forEach(function (checkbox) {
-                    checkbox.checked = event.target.checked;
-                });
-            });
-
-
-            document.getElementById("selectPartAll").addEventListener("change", function (event) {
-                var checkboxes = document.querySelectorAll('#partDropdown input[type="checkbox"]');
-                checkboxes.forEach(function (checkbox) {
-                    checkbox.checked = event.target.checked;
-                });
-            });
-
-
-            // Example AJAX request for deletion
-            // Example AJAX request for deletion
-            document.querySelectorAll('.remove-button').forEach(function (button) {
-                button.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    var form = this.closest('form');
-
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "This connection will be permanently deleted.",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Yes, delete it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Perform the deletion
-                            var formData = new FormData(form);
-                            fetch(form.action, {
-                                method: 'POST',
-                                body: formData
-                            })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.status === 'success') {
-                                        form.closest('tr').remove();
-                                        Swal.fire({
-                                            icon: 'success',
-                                            text: 'Connection deleted successfully.'
-                                        });
-                                    } else {
-                                        Swal.fire({
-                                            icon: 'error',
-                                            text: data.message || 'Error deleting connection.'
-                                        });
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    Swal.fire({
-                                        icon: 'error',
-                                        text: 'An error occurred while deleting.'
-                                    });
-                                });
-                        }
-                    });
-                });
-            });
-
-
-            // Attach event listener to the "Connect" button form submission
-            document.querySelector('#modelPartForm [type="submit"]').addEventListener('click', function (event) {
-                // Check if at least one model is selected
-                var selectedModels = document.querySelectorAll('input[name="selectedModels"]:checked');
-                if (selectedModels.length === 0) {
-                    alert('Please select at least one model.');
-                    event.preventDefault(); // Prevent form submission
-                    return;
-                }
-
-                // Check if at least one part is selected
-                var selectedParts = document.querySelectorAll('input[name="selectedParts"]:checked');
-                if (selectedParts.length === 0) {
-                    alert('Please select at least one part.');
-                    event.preventDefault(); // Prevent form submission
-                    return;
-                }
-
-                // Scroll to the top of the table after the form submission
-                scrollToTableTop();
-            });
-
-
-        });
-        document.addEventListener('DOMContentLoaded', function () {
-            // Function to update local storage with the selected model IDs
-            function updateLocalStorage(checkbox) {
-                var selectedModels = [];
-                // Iterate over all selected checkboxes and store their values in an array
-                document.querySelectorAll('#modelDropdown input[name="selectedModels"]:checked').forEach(function (cb) {
-                    selectedModels.push(cb.value);
-                });
-                // Store the array in local storage
-                localStorage.setItem('selectedModels', JSON.stringify(selectedModels));
+            
+            const selectedTargets = [...copyForm.querySelectorAll('input[name="targetModels"]:checked')];
+            if (selectedTargets.length === 0) {
+                event.preventDefault();
+                return;
             }
-
-            // Function to retrieve the selected model IDs from local storage and mark them as selected in the dropdown
-            function retrieveSelectedModels() {
-                var selectedModels = localStorage.getItem('selectedModels');
-                if (selectedModels) {
-                    selectedModels = JSON.parse(selectedModels);
-                    // Iterate over the stored array of selected model IDs and mark the corresponding checkboxes as checked
-                    selectedModels.forEach(function (modelId) {
-                        var checkbox = document.querySelector('input[name="selectedModels"][value="' + modelId + '"]');
-                        if (checkbox) {
-                            checkbox.checked = true;
-                        }
-                    });
-                }
-            }
-
-            // Attach event listener to each checkbox
-            document.querySelectorAll('#modelDropdown input[name="selectedModels"]').forEach(function (checkbox) {
-                checkbox.addEventListener('change', function () {
-                    // Update local storage with the current state of checkboxes
-                    updateLocalStorage(checkbox);
-                });
-            });
-
-            // Call the function to retrieve the selected model IDs from local storage
-            retrieveSelectedModels();
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const copyForm = document.getElementById('copyForm');
-            if (copyForm) {
-                copyForm.addEventListener('submit', function (event) {
-                    var sourceModel = document.getElementById('sourceModel');
-                    var sourceModelValue = sourceModel ? sourceModel.value : '';
-                    var targetModels = document.querySelectorAll('input[name="targetModels"]:checked');
-                    
-                    if (!sourceModelValue || targetModels.length === 0) {
-                        alert('Please select both source and target models.');
-                        event.preventDefault();
-                    } else if (Array.from(targetModels).some(cb => cb.value === sourceModelValue)) {
-                        alert('Source and target models cannot be the same.');
-                        event.preventDefault();
-                    }
-                });
+            
+            if (selectedTargets.some(cb => cb.value === sourceModelSelect.value)) {
+                alert('Source and target models cannot be the same.');
+                event.preventDefault();
+                return;
             }
         });
-    </script>
+    }
+});
 
-    <!-- Add script to preserve view mode state -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Function to save selected view model to localStorage
-            function saveViewModelSelection() {
-                const selectedModel = document.querySelector('input[name="selectedModelView"]:checked');
-                if (selectedModel) {
-                    localStorage.setItem('selectedViewModel', selectedModel.value);
-                }
-            }
-
-            // Function to restore selected view model from localStorage
-            function restoreViewModelSelection() {
-                const savedModelId = localStorage.getItem('selectedViewModel');
-                if (savedModelId) {
-                    const radio = document.querySelector(`input[name="selectedModelView"][value="${savedModelId}"]`);
-                    if (radio) {
-                        radio.checked = true;
-                    }
-                }
-            }
-
-            // Save selection when radio button changes
-            document.querySelectorAll('input[name="selectedModelView"]').forEach(function (radio) {
-                radio.addEventListener('change', function () {
-                    saveViewModelSelection();
-                });
-            });
-
-            // Restore selection on page load (only if no model is already selected from backend)
-            const hasSelectedModel = document.querySelector('input[name="selectedModelView"]:checked');
-            if (!hasSelectedModel) {
-                restoreViewModelSelection();
-            }
-
-            // Clear localStorage when switching to other modes
-            document.querySelectorAll('[onclick*="showSection"]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    if (!this.onclick.toString().includes('viewSection')) {
-                        localStorage.removeItem('selectedViewModel');
-                    }
-                });
-            });
-            //  NEW: Auto-show viewSection if there's model data or selected model (from view operation)
-            {% if is_view_operation %}
-            showSection('viewSection');
-            localStorage.setItem('currentSection', 'viewSection');
-            {% else %}
-            //  NEW: Restore the previously active section if no specific section should be shown
-            const savedSection = localStorage.getItem('currentSection');
-            if (savedSection) {
-                showSection(savedSection);
-            }
-            {% endif %}
-        });
-    </script>
-
-    <script>
-        // model search
-        document.getElementById('modelSearch').addEventListener('keyup', function () {
-            var filter = this.value.toLowerCase();
-            document.querySelectorAll('#modelDropdown label').forEach(function (label) {
-                var text = label.textContent.toLowerCase();
-                label.style.display = text.includes(filter) ? '' : 'none';
-            });
-        });
-
-        // part search
-        document.getElementById('partSearch').addEventListener('keyup', function () {
-            var filter = this.value.toLowerCase();
-            document.querySelectorAll('#partDropdown label').forEach(function (label) {
-                var text = label.textContent.toLowerCase();
-                label.style.display = text.includes(filter) ? '' : 'none';
-            });
-        });
-
-        $(document).ready(function () {
-            // Select2 initialization removed; should be handled in base.html
-        });
-    </script>
-
-    <script>
-        function showSection(sectionId) {
-            const sections = ['connectSection', 'copySection', 'viewSection'];
-            sections.forEach(id => {
-                document.getElementById(id).style.display = (id === sectionId) ? 'flex' : 'none';
-            });
-            //  Save the current section to localStorage
-            localStorage.setItem('currentSection', sectionId);
+// Auto-select first platform option if none is selected
+$(document).ready(function() {
+    $('#platformDropdown').on('change', function() {
+        $('#filterForm').submit();
+    });
+    
+    var platformDropdown = $('#platformDropdown');
+    if (platformDropdown.val() === '') {
+        var firstOption = platformDropdown.find('option:not(:first)').first();
+        if (firstOption.length > 0) {
+            firstOption.prop('selected', true);
+            $('#filterForm').submit();
         }
-    </script> <!-- js1 -->
+    }
+});
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const viewForm = document.getElementById('viewForm');
-            const viewButton = viewForm.querySelector('button[type="submit"]');
-
-            viewButton.addEventListener('click', function (event) {
-                const selectedModel = viewForm.querySelector('input[name="selectedModelView"]:checked');
-                if (!selectedModel) {
-                    event.preventDefault();
-                    Swal.fire({
-                        icon: 'warning',
-                        text: 'Please select a model to view connected parts.'
-                    });
-                }
-            });
-        });
-    </script> <!-- js2-->
-
-    <script>
-        // Generic filter function
-        function filterDropdown(searchInputId, dropdownClass) {
-            const input = document.getElementById(searchInputId);
-            const filter = input.value.toLowerCase();
-            const labels = input.closest('.dropdown-content').querySelectorAll("label");
-
-            labels.forEach(label => {
-                const text = label.textContent.toLowerCase();
-                if (text.includes(filter)) {
-                    label.style.display = "";
-                } else {
-                    label.style.display = "none";
-                }
-            });
+// Connect section dropdown state management
+document.addEventListener('DOMContentLoaded', function() {
+    const platformSelect = document.getElementById('platformDropdown');
+    const toModelsDropdownBtn = document.querySelector('.to-models-dropdown > button.dropbtn');
+    const toModelsDropdownContent = document.querySelector('.to-models-dropdown .dropdown-content');
+    const partsDropdownBtn = document.querySelector('.select-parts-dropdown > button.dropbtn');
+    const partsDropdownContent = document.querySelector('.select-parts-dropdown .dropdown-content');
+    const connectButton = document.querySelector('button[type="submit"].dropbtn');
+    
+    function setDropdownDisabled(content, disabled) {
+        if (!content) return;
+        if (disabled) {
+            content.classList.add('disabled');
+            content.querySelectorAll('input').forEach(input => input.disabled = true);
+        } else {
+            content.classList.remove('disabled');
+            content.querySelectorAll('input').forEach(input => input.disabled = false);
         }
-
-        // Attach filter listeners for each search box
-        document.getElementById("modelSearch").addEventListener("keyup", function () {
-            filterDropdown("modelSearch");
+    }
+    
+    function updateDropdownState() {
+        if (!platformSelect) return;
+        const platformSelected = platformSelect.value !== '';
+        setDropdownDisabled(toModelsDropdownContent, !platformSelected);
+        setDropdownDisabled(partsDropdownContent, !platformSelected);
+        if (connectButton) connectButton.disabled = !platformSelected;
+    }
+    
+    updateDropdownState();
+    
+    if (platformSelect) {
+        platformSelect.addEventListener('change', updateDropdownState);
+    }
+    
+    if (toModelsDropdownBtn) {
+        toModelsDropdownBtn.addEventListener('click', function(e) {
+            if (!platformSelect || !platformSelect.value) {
+                alert('Please select a Client first.');
+                e.stopPropagation();
+            }
         });
-
-        document.getElementById("partSearch").addEventListener("keyup", function () {
-            filterDropdown("partSearch");
+    }
+    
+    if (partsDropdownBtn) {
+        partsDropdownBtn.addEventListener('click', function(e) {
+            if (!platformSelect || !platformSelect.value) {
+                alert('Please select a Client first.');
+                e.stopPropagation();
+            }
         });
+    }
+});
 
-        document.getElementById("targetModelSearch").addEventListener("keyup", function () {
-            filterDropdown("targetModelSearch");
+// View section functionality
+document.getElementById('selectModelsButton')?.addEventListener('click', function(e) {
+    const platformSelect = document.getElementById('platformDropdown');
+    if (!platformSelect || !platformSelect.value) {
+        alert('Please select a platform first.');
+        platformSelect?.focus();
+        e.stopPropagation();
+        return;
+    }
+    
+    const dropdownContent = document.getElementById('selectModelsContent');
+    dropdownContent.style.display = (dropdownContent.style.display === 'block') ? 'none' : 'block';
+});
+
+window.addEventListener('click', function(e) {
+    const dropdownContent = document.getElementById('selectModelsContent');
+    const button = document.getElementById('selectModelsButton');
+    if (button && dropdownContent && !button.contains(e.target) && !dropdownContent.contains(e.target)) {
+        dropdownContent.style.display = 'none';
+    }
+});
+
+// Search functionality
+document.getElementById('modelSearch')?.addEventListener('keyup', function() {
+    var filter = this.value.toLowerCase();
+    document.querySelectorAll('.to-models-dropdown .dropdown-content label').forEach(function(label) {
+        var text = label.textContent.toLowerCase();
+        label.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+
+document.getElementById('partSearch')?.addEventListener('keyup', function() {
+    var filter = this.value.toLowerCase();
+    document.querySelectorAll('.select-parts-dropdown .dropdown-content label').forEach(function(label) {
+        var text = label.textContent.toLowerCase();
+        label.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+
+document.getElementById('targetModelSearch')?.addEventListener('keyup', function() {
+    filterDropdown('targetModelSearch');
+});
+
+document.getElementById('viewModelSearch')?.addEventListener('keyup', function() {
+    filterDropdown('viewModelSearch');
+});
+
+function filterDropdown(searchInputId) {
+    const input = document.getElementById(searchInputId);
+    if (!input) return;
+    const filter = input.value.toLowerCase();
+    const labels = input.closest('.dropdown-content').querySelectorAll("label");
+    
+    labels.forEach(label => {
+        const text = label.textContent.toLowerCase();
+        label.style.display = text.includes(filter) ? "" : "none";
+    });
+}
+
+// Select/Deselect All functionality
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('selectModelAll')?.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('input[name="selectedModels"]');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+    
+    document.getElementById('selectPartAll')?.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('input[name="selectedParts"]');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+    
+    document.getElementById('selectTargetAll')?.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('input[name="targetModels"]');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+});
+
+// Enable Select2 search for model dropdown in copy section
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.jQuery && window.jQuery.fn.select2) {
+        window.jQuery('#sourceModel').select2({
+            placeholder: 'From Model',
+            allowClear: true,
+            width: '180px'
         });
+    }
+});
 
-        document.getElementById("viewModelSearch").addEventListener("keyup", function () {
-            filterDropdown("viewModelSearch");
-        });
-    </script> <!-- js 3-->
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            //  Select/Deselect All for Models (Connect section)
-            document.getElementById('selectModelAll').addEventListener('change', function () {
-                const checkboxes = document.querySelectorAll('input[name="selectedModels"]');
-                checkboxes.forEach(cb => cb.checked = this.checked);
-            });
-
-            //  Select/Deselect All for Parts
-            document.getElementById('selectPartAll').addEventListener('change', function () {
-                const checkboxes = document.querySelectorAll('input[name="selectedParts"]');
-                checkboxes.forEach(cb => cb.checked = this.checked);
-            });
-
-            //  Select/Deselect All for Target Models (Copy section)
-            document.getElementById('selectTargetAll').addEventListener('change', function () {
-                const checkboxes = document.querySelectorAll('input[name="targetModels"]');
-                checkboxes.forEach(cb => cb.checked = this.checked);
-            });
-        });
-    </script> <!-- js 4-->
-    <script>
-       function showToast(message, type = 'success') {
+// Flash messages display
+{% if messages %}
+function displayFlashMessages() {
+    {% for message in messages %}
     Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: type,
-        title: message,
-        showConfirmButton: false,
-        timer: 2000,
-        timerProgressBar: true
+        icon: "{{ message.tags }}",
+        text: "{{ message }}"
     });
+    {% endfor %}
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-   
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (const cookie of cookies) {
-                const c = cookie.trim();
-                if (c.startsWith(name + '=')) {
-                    cookieValue = decodeURIComponent(c.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    const csrfToken = getCookie('csrftoken');
+window.addEventListener('DOMContentLoaded', function() {
+    displayFlashMessages();
+});
+{% endif %}
 
-
-    const form = document.getElementById('modelPartForm');
-    form.addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        if (form.querySelectorAll('input[name="selectedModels"]:checked').length === 0) {
-            showToast('Please select at least one model.', 'error');
-            return;
-        }
-        if (form.querySelectorAll('input[name="selectedParts"]:checked').length === 0) {
-            showToast('Please select at least one part.', 'error');
-            return;
-        }
-
-        const formData = new FormData(form);
-
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken,
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message || 'Models connected successfully.');
-                // Clear all checkboxes after successful connect
-                form.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-            } else {
-                showToast(data.message || 'Failed to connect models and parts.', 'error');
-            }
-        })
-        .catch(() => {
-            showToast('An error occurred while connecting models and parts.', 'error');
-        });
-    });
-
-   
-    const viewForm = document.getElementById('viewForm');
-    viewForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        const selectedModel = viewForm.querySelector('input[name="selectedModelView"]:checked');
-        if (!selectedModel) {
-            showToast('Please select a model to view connected parts.', 'error');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('selectedModelView', selectedModel.value);
-        formData.append('view_button', 'view');
-        formData.append('csrfmiddlewaretoken', csrfToken);
-
-        fetch(viewForm.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateModelDataTable(data.connections);
-                showToast(data.message || 'Connections loaded successfully.');
-            } else {
-                showToast(data.message || 'Failed to load connections.', 'error');
-            }
-        })
-        .catch(() => {
-            showToast('Error occurred while loading connections.', 'error');
-        });
-    });
-
+// Modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = document.getElementById("myModal");
+    var modalImg = document.getElementById("modal-image");
+    var span = document.getElementsByClassName("close")[0];
     
-    function updateModelDataTable(connections) {
-        const container = document.querySelector('.model-data-container');
-        let bulkDeleteForm = document.getElementById('bulkDeleteForm');
-        if (!bulkDeleteForm) {
-            bulkDeleteForm = document.createElement('form');
-            bulkDeleteForm.id = 'bulkDeleteForm';
-            bulkDeleteForm.method = 'post';
-            bulkDeleteForm.action = '{% url 'remove_model_part' %}';
-            bulkDeleteForm.innerHTML = `
-                {% csrf_token %}
-                <button id="bulkDeleteBtn" type="button" style="margin-bottom:10px; background:#d33; color:#fff; border:none; padding:8px 16px; border-radius:4px;">Delete Selected</button>
-                <table class="model-data" style="width:100%;">
-                    <thead>
-                        <tr>
-                            <th>Part</th>
-                            <th>Part Namez</th>
-                            <th>Part No</th>
-                            <th>Part Name</th>
-                            <th>Checkpoint</th>
-                            <th>Image</th>
-                            <th>Log Date</th>
-                            <th>Delete</th>
-                            <th>Select <input type="checkbox" id="selectAllCheckbox" title="Select All"></th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            `;
-// Select All Checkbox JS
-document.addEventListener('change', function (event) {
-    if (event.target && event.target.id === 'selectAllCheckbox') {
-        var bulkDeleteForm = document.getElementById('bulkDeleteForm');
-        var checkboxes = bulkDeleteForm.querySelectorAll('.row-checkbox');
-        checkboxes.forEach(cb => {
-            cb.checked = event.target.checked;
-        });
+    if (span) {
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+    }
+    
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
     }
 });
-            container.innerHTML = '';
-            container.appendChild(bulkDeleteForm);
-        }
-        const tbody = bulkDeleteForm.querySelector('tbody');
-        tbody.innerHTML = '';
+</script>
 
-        if (!connections.length) {
-            tbody.innerHTML = '<tr><td colspan="6">No connections found.</td></tr>';
-            return;
-        }
-
-        connections.forEach(conn => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${conn.model_code}</td>
-                <td>${conn.model_description}</td>
-                <td>${conn.part_no}</td>
-                <td>${conn.part_name}</td>
-                <td>${conn.checkpoint}</td>
-                <td>${conn.image
-                    ? `<a class='view-button' href='#' data-image-url='${conn.image.startsWith('http') || conn.image.startsWith('/') ? conn.image : '/media/' + conn.image}' style='color:#062A63; font-size:20px; text-decoration:none;'>View</a>`
-                    : 'No Image'}</td>
-                <td>${conn.log_date}</td>
-                <td></td>
-                <td><input type="checkbox" class="row-checkbox" name="selected_ids" value="${conn.model_id}:${conn.part_id}"></td>
-            `;
-            tbody.appendChild(row);
-
-            // Add single delete form outside bulk form for each row
-            const deleteCell = row.children[7];
-            const deleteForm = document.createElement('form');
-            deleteForm.method = 'post';
-            deleteForm.action = '{% url 'remove_model_part' %}';
-            deleteForm.innerHTML = `
-                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
-                <input type="hidden" name="model_id" value="${conn.model_id}">
-                <input type="hidden" name="part_id" value="${conn.part_id}">
-                <button type="submit" class="remove-button" style="background:none; border:none; color:red; font-size:20px; cursor:pointer;">Delete</button>
-            `;
-            deleteCell.appendChild(deleteForm);
-        });
-
-        // Re-attach view-button click event for modal image after table update
-        setTimeout(function() {
-            document.querySelectorAll('.view-button').forEach(function(btn) {
-                btn.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    var imageUrl = btn.getAttribute('data-image-url');
-                    var modal = document.getElementById("myModal");
-                    var modalImg = document.getElementById("modal-image");
-                    if (imageUrl) {
-                        modalImg.src = imageUrl;
-                        modal.style.display = "block";
-                    } else {
-                        Swal.fire({
-                            icon: 'info',
-                            text: 'No image available for this part.'
-                        });
-                    }
-                });
-            });
-        }, 100);
-// Re-attach single delete event listeners after table update
-function attachSingleDeleteListeners() {
-    document.querySelectorAll('.remove-button').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            event.preventDefault();
-            var form = this.closest('form');
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'This connection will be permanently deleted.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then(function (result) {
-                if (result.isConfirmed) {
-                    var formData = new FormData(form);
-                    fetch(form.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            form.closest('tr').remove();
-                            Swal.fire({
-                                icon: 'success',
-                                text: 'Connection deleted successfully.'
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                text: data.message || 'Error deleting connection.'
-                            });
-                        }
-                    })
-                    .catch(() => {
-                        Swal.fire({
-                            icon: 'error',
-                            text: 'An error occurred while deleting.'
-                        });
-                    });
-                }
-            });
-        });
-    });
-}
-
-// Call after table update
-setTimeout(attachSingleDeleteListeners, 100);
-    }
-// Bulk Delete JS
-document.addEventListener('click', function (event) {
-    if (event.target && event.target.id === 'bulkDeleteBtn') {
-        event.preventDefault();
-        var bulkDeleteForm = document.getElementById('bulkDeleteForm');
-        var checkedBoxes = bulkDeleteForm.querySelectorAll('.row-checkbox:checked');
-        if (checkedBoxes.length === 0) {
-            Swal.fire({
-                icon: 'warning',
-                text: 'Please select at least one connection to delete.'
-            });
-            return;
-        }
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'Selected connections will be permanently deleted.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete them!'
-        }).then(function (result) {
-            if (result.isConfirmed) {
-                var formData = new FormData(bulkDeleteForm);
-                formData.delete('bulk_delete[]');
-                checkedBoxes.forEach(cb => {
-                    formData.append('bulk_delete[]', cb.value);
-                });
-                fetch(bulkDeleteForm.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            text: data.message || 'Selected connections deleted.'
-                        });
-                        checkedBoxes.forEach(cb => {
-                            var row = cb.closest('tr');
-                            if (row) row.remove();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            text: data.message || 'Bulk delete failed.'
-                        });
-                    }
-                })
-                .catch(() => {
-                    Swal.fire({
-                        icon: 'error',
-                        text: 'An error occurred while deleting.'
-                    });
-                });
-            }
-        });
-    }
-});
-
-    
-    // Note: Remove button event handling is already covered by the event delegation above
-    // const tbody = document.querySelector('.model-data tbody');
-    // tbody.addEventListener - this is redundant and causes errors when tbody doesn't exist
-
-    
-    const copyForm = document.getElementById('copyForm');
-    copyForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        const sourceModel = copyForm.querySelector('#sourceModel').value;
-        const targetModels = [...copyForm.querySelectorAll('input[name="targetModels"]:checked')].map(cb => cb.value);
-
-        if (!sourceModel || targetModels.length === 0) {
-            showToast('Please select both From Model and To Models.', 'error');
-            return;
-        }
-        if (targetModels.includes(sourceModel)) {
-            showToast('Source and target models cannot be the same.', 'error');
-            return;
-        }
-
-        const formData = new FormData(copyForm);
-
-        fetch(copyForm.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken,
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message || 'Data copied successfully.');
-                // Clear all checkboxes after successful copy
-                copyForm.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-            } else {
-                showToast(data.message || 'Copy operation failed.', 'error');
-            }
-        })
-        .catch(() => {
-            showToast('An error occurred while copying data.', 'error');
-        });
-    });
-});
-
-    </script>
-
-    <script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
-    <!-- jQuery (required for Select2) -->
-    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
-    <!-- <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> -->
-
-
-    {% endblock %}
-    <!-- </body> -->
-
-    <!-- </html> -->
+{% endblock %}

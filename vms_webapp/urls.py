@@ -197,12 +197,11 @@ urlpatterns = [
     
     path('add-ferrule-direction/', views.add_ferrule_direction, name='add_ferrule_direction'),
     path('delete-ferrule-direction/<int:pk>/', views.delete_ferrule_direction, name='delete_ferrule_direction'),
-    
+    path('get_model_ferrule_count/', views.get_model_ferrule_count, name='get_model_ferrule_count'),
     path('add-burden/', views.add_burden, name='add_burden'),
     path('delete-burden/<int:pk>/', views.delete_burden, name='delete_burden'),
 
     path('add-ratio/', views.add_ratio, name='add_ratio'),
     path('delete-ratio/<int:pk>/', views.delete_ratio, name='delete_ratio'),
     path('download-pdf/', views.download_pdf, name='download_pdf'),
-    
 ]
