@@ -423,38 +423,74 @@ class attribute_count_tbl(models.Model):
     log_date = models.DateTimeField(auto_now=True)
 
 class RatioMaster(models.Model):
-    ratio = models.CharField(max_length=50, unique=True)
+    ratio = models.CharField(max_length=50, unique=True,  default="Not Applicable")
 
     def __str__(self):
         return self.ratio
 
 
 class BurdenMaster(models.Model):
-    burden = models.CharField(max_length=50, unique=True)
+    burden = models.CharField(max_length=50, unique=True, default="Not Applicable")
 
     def __str__(self):
         return self.burden
 
 
 class FerruleDirectionMaster(models.Model):
-    direction = models.CharField(max_length=255, unique=True)
+    direction = models.CharField(max_length=255, unique=True, default="Not Applicable")
 
     def __str__(self):
         return self.direction
 
 
 class LabelTypeMaster(models.Model):
-    label_type = models.CharField(max_length=255, unique=True)
+    label_type = models.CharField(max_length=255, unique=True, default="Not Applicable")
 
     def __str__(self):
         return self.label_type
 
 
 class FerruleNumberMaster(models.Model):
-    number = models.IntegerField(unique=True)
+    number = models.IntegerField(unique=True,)
 
     def __str__(self):
         return str(self.number)
+    
+class ClassMaster(models.Model):
+    class_value = models.CharField("Class", max_length=50, unique=True)
+    log_date = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.class_value
+    
+    class Meta:
+        verbose_name = "Class"
+        verbose_name_plural = "Classes"
+
+
+class FSMaster(models.Model):
+    fs = models.CharField("FS", max_length=50, unique=True, default="Not Applicable")
+    log_date = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.fs
+    
+    class Meta:
+        verbose_name = "FS"
+        verbose_name_plural = "FS Values"
+
+
+class KVARatingMaster(models.Model):
+    kva_rating = models.CharField("KVA Rating", max_length=50, unique=True, default="Not Applicable")
+    log_date = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.kva_rating
+    
+    class Meta:
+        verbose_name = "KVA Rating"
+        verbose_name_plural = "KVA Ratings"
+
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 class model_code_tbl(models.Model):
@@ -464,6 +500,9 @@ class model_code_tbl(models.Model):
     ratio = models.CharField(max_length=50)
     burden = models.CharField(max_length=50)
     label_type = models.CharField(max_length=255)
+    class_value = models.CharField("Class", max_length=50, null=True, blank=True)
+    fs = models.CharField("FS", max_length=50, null=True, blank=True)
+    kva_rating = models.CharField("KVA Rating", max_length=50, null=True, blank=True)
     ferrule_direction = models.CharField(max_length=255)
     no_of_ferrules = models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(6)]

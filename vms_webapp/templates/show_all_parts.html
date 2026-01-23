@@ -112,7 +112,6 @@
       </div>
     </div>
     
-
     <!-- Attribute Card -->
     <div class="col-md-4">
       <div class="card shadow fixed-card">
@@ -260,7 +259,7 @@
     </div>
   </div>
 
-  <!-- NEW ROW: Label Type, Ferrule Direction, Burden -->
+  <!-- Label Type, Ferrule Direction, Burden -->
   <div class="row mt-3">
     <!-- Label Type Card -->
     <div class="col-md-4">
@@ -373,38 +372,141 @@
       </div>
     </div>
   </div>
+
+  <!-- Ratio Row -->
   <div class="row mt-3">
-      <div class="col-md-4">
-        <div class="card shadow fixed-card">
-          <div class="card-header">
-            <h5>All Ratios</h5>
-            <button id="addRatioBtn" class="btn btn-light btn-sm add-btn"><i class="fas fa-plus"></i> Add</button>
-          </div>
-          <div class="card-body">
-            {% if ratios %}
-            <table class="table table-bordered table-hover align-middle text-center">
-              <thead class="custom-head">
-                <tr><th>#</th><th>Ratio</th><th>Action</th></tr>
-              </thead>
-              <tbody>
-                {% for item in ratios %}
-                <tr>
-                  <td>{{ forloop.counter }}</td>
-                  <td>{{ item.ratio }}</td>
-                  <td>
-                    <form method="POST" action="{% url 'delete_ratio' item.pk %}" onsubmit="return confirm('Delete {{ item.ratio }}?');">
-                      {% csrf_token %}
-                      <button class="btn btn-danger btn-sm delete-btn">Delete</button>
-                    </form>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-            {% else %}<p class="text-muted text-center">No Ratios found</p>{% endif %}
-          </div>
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Ratios</h5>
+          <button id="addRatioBtn" class="btn btn-light btn-sm add-btn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div class="card-body">
+          {% if ratios %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Ratio</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in ratios %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.ratio }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_ratio' item.pk %}" onsubmit="return confirm('Delete {{ item.ratio }}?');">
+                    {% csrf_token %}
+                    <button class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}<p class="text-muted text-center">No Ratios found</p>{% endif %}
         </div>
       </div>
+    </div>
+
+    <!-- NEW: Class Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All Classes</h5>
+          <button id="addClassBtn" class="btn btn-light btn-sm add-btn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div class="card-body">
+          {% if classes %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>Class</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in classes %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.class_value }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_class' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.class_value }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}<p class="text-muted text-center">No classes found.</p>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW: FS Card -->
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All FS Values</h5>
+          <button id="addFsBtn" class="btn btn-light btn-sm add-btn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div class="card-body">
+          {% if fs_values %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>FS</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in fs_values %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.fs }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_fs' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.fs }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}<p class="text-muted text-center">No FS values found.</p>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW ROW: KVA Rating -->
+  <div class="row mt-3">
+    <div class="col-md-4">
+      <div class="card shadow fixed-card">
+        <div class="card-header">
+          <h5>All KVA Ratings</h5>
+          <button id="addKvaRatingBtn" class="btn btn-light btn-sm add-btn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div class="card-body">
+          {% if kva_ratings %}
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="custom-head">
+              <tr><th>#</th><th>KVA Rating</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for item in kva_ratings %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.kva_rating }}</td>
+                <td>
+                  <form method="POST" action="{% url 'delete_kva_rating' item.pk %}" class="d-inline delete-form" onsubmit="return confirm('Delete {{ item.kva_rating }}? This action cannot be undone!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}<p class="text-muted text-center">No KVA ratings found.</p>{% endif %}
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -507,7 +609,6 @@
   </div>
 </div>
 
-<!-- NEW MODALS -->
 <!-- Add Label Type Modal -->
 <div id="labelTypeModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
   <div class="modal-dialog modal-sm modal-dialog-centered">
@@ -559,6 +660,7 @@
   </div>
 </div>
 
+<!-- Add Ratio Modal -->
 <div id="ratioModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
@@ -569,6 +671,57 @@
         <div class="text-end">
           <button type="submit" class="btn btn-light btn-sm">Save</button>
           <button type="button" class="btn btn-outline-light btn-sm" id="cancelRatio">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- NEW: Add Class Modal -->
+<div id="classModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add Class</h5>
+      <form method="post" action="{% url 'add_class' %}">
+        {% csrf_token %}
+        <input type="text" name="class_value" class="form-control mb-2" placeholder="Class" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelClass">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- NEW: Add FS Modal -->
+<div id="fsModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add FS</h5>
+      <form method="post" action="{% url 'add_fs' %}">
+        {% csrf_token %}
+        <input type="text" name="fs" class="form-control mb-2" placeholder="FS Value" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelFs">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- NEW: Add KVA Rating Modal -->
+<div id="kvaRatingModal" class="modal" tabindex="-1" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content p-3 rounded" style="background-color: #062A63; color: white;">
+      <h5 class="mb-3 text-center">Add KVA Rating</h5>
+      <form method="post" action="{% url 'add_kva_rating' %}">
+        {% csrf_token %}
+        <input type="text" name="kva_rating" class="form-control mb-2" placeholder="KVA Rating" required style="color: black;">
+        <div class="text-end">
+          <button type="submit" class="btn btn-light btn-sm">Save</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="cancelKvaRating">Cancel</button>
         </div>
       </form>
     </div>
@@ -587,12 +740,15 @@
   document.getElementById("addLocationBtn").onclick = () => document.getElementById("locationModal").style.display = "block";
   document.getElementById("addAttributeBtn").onclick = () => document.getElementById("attributeModal").style.display = "block";
   document.getElementById("addUserLevelBtn").onclick = () => document.getElementById("userLevelModal").style.display = "block";
-  
-  // NEW button handlers
   document.getElementById("addLabelTypeBtn").onclick = () => document.getElementById("labelTypeModal").style.display = "block";
   document.getElementById("addRatioBtn").onclick = () => document.getElementById("ratioModal").style.display = "block";
   document.getElementById("addFerruleDirectionBtn").onclick = () => document.getElementById("ferruleDirectionModal").style.display = "block";
   document.getElementById("addBurdenBtn").onclick = () => document.getElementById("burdenModal").style.display = "block";
+  
+  // NEW button handlers for Class, FS, and KVA Rating
+  document.getElementById("addClassBtn").onclick = () => document.getElementById("classModal").style.display = "block";
+  document.getElementById("addFsBtn").onclick = () => document.getElementById("fsModal").style.display = "block";
+  document.getElementById("addKvaRatingBtn").onclick = () => document.getElementById("kvaRatingModal").style.display = "block";
 
   // Existing cancel handlers
   document.getElementById("cancelSeverity").onclick = () => document.getElementById("severityModal").style.display = "none";
@@ -601,18 +757,22 @@
   document.getElementById("cancelConcern").onclick = () => document.getElementById("concernModal").style.display = "none";
   document.getElementById("cancelHighlight").onclick = () => document.getElementById("highlightModal").style.display = "none";
   document.getElementById("cancelUserLevel").onclick = () => document.getElementById("userLevelModal").style.display = "none";
-  
-  // NEW cancel handlers
   document.getElementById("cancelLabelType").onclick = () => document.getElementById("labelTypeModal").style.display = "none";
   document.getElementById("cancelRatio").onclick = () => document.getElementById("ratioModal").style.display = "none";
   document.getElementById("cancelFerruleDirection").onclick = () => document.getElementById("ferruleDirectionModal").style.display = "none";
   document.getElementById("cancelBurden").onclick = () => document.getElementById("burdenModal").style.display = "none";
+  
+  // NEW cancel handlers for Class, FS, and KVA Rating
+  document.getElementById("cancelClass").onclick = () => document.getElementById("classModal").style.display = "none";
+  document.getElementById("cancelFs").onclick = () => document.getElementById("fsModal").style.display = "none";
+  document.getElementById("cancelKvaRating").onclick = () => document.getElementById("kvaRatingModal").style.display = "none";
 
   // Window click to close modals
   window.onclick = function(e) {
     const modalIds = [
       'severityModal', 'locationModal', 'attributeModal', 'concernModal', 
-      'highlightModal', 'userLevelModal', 'labelTypeModal','ratioModal', 'ferruleDirectionModal', 'burdenModal'
+      'highlightModal', 'userLevelModal', 'labelTypeModal', 'ratioModal', 
+      'ferruleDirectionModal', 'burdenModal', 'classModal', 'fsModal', 'kvaRatingModal'
     ];
     modalIds.forEach(id => {
       if (e.target === document.getElementById(id)) {

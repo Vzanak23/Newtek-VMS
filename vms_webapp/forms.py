@@ -13,6 +13,9 @@ from .models import (
     user_level_tbl,
     user_tbl,
     model_checkpoint_tbl,
+    ClassMaster,
+    FSMaster,
+    KVARatingMaster,
 )
 
 
@@ -49,22 +52,35 @@ class MasterCodeForm(forms.ModelForm):
     # Fetch choices from master tables
     ratio = forms.ChoiceField(
         choices=[],
-        required=True,
+        required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+    
     burden = forms.ChoiceField(
         choices=[],
-        required=True,
+        required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     label_type = forms.ChoiceField(
         choices=[],
-        required=True,
+        required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-
-    
-   
+    class_value = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    fs = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    kva_rating = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     ferrule_direction = forms.CharField(
         required=False,
         widget=forms.HiddenInput()
@@ -77,7 +93,10 @@ class MasterCodeForm(forms.ModelForm):
             "model_description", 
             "ratio", 
             "burden", 
-            "label_type", 
+            "label_type",
+            "class_value",
+            "fs",
+            "kva_rating",
             "ferrule_direction", 
             "no_of_ferrules"
         ]
@@ -88,32 +107,65 @@ class MasterCodeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+        na = [('', 'Not Applicable')]
+
         # Populate ratio choices
         ratio_choices = [(r.ratio, r.ratio) for r in RatioMaster.objects.all().order_by('ratio')]
-        self.fields['ratio'].choices = [('', 'Select Ratio')] + ratio_choices
-        
+        self.fields['ratio'].choices = na + ratio_choices
+
         # Populate burden choices
         burden_choices = [(b.burden, b.burden) for b in BurdenMaster.objects.all().order_by('burden')]
-        self.fields['burden'].choices = [('', 'Select Burden')] + burden_choices
-        
+        self.fields['burden'].choices = na + burden_choices
+
         # Populate label type choices
         label_type_choices = [(lt.label_type, lt.label_type) for lt in LabelTypeMaster.objects.all().order_by('label_type')]
-        self.fields['label_type'].choices = [('', 'Select Label Type')] + label_type_choices
-        
+        self.fields['label_type'].choices = na + label_type_choices
+
+        # Populate class value choices
+        class_value_choices = [(cv.class_value, cv.class_value) for cv in ClassMaster.objects.all().order_by('class_value')]
+        self.fields['class_value'].choices = na + class_value_choices
+
+        # Populate fs choices
+        fs_choices = [(fs.fs, fs.fs) for fs in FSMaster.objects.all().order_by('fs')]
+        self.fields['fs'].choices = na + fs_choices
+
+        # Populate kva rating choices
+        kva_rating_choices = [(kr.kva_rating, kr.kva_rating) for kr in KVARatingMaster.objects.all().order_by('kva_rating')]
+        self.fields['kva_rating'].choices = na + kva_rating_choices
+
         # Populate number of ferrules choices
         ferrule_number_choices = [(str(fn.number), str(fn.number)) for fn in FerruleNumberMaster.objects.all().order_by('number')]
-        self.fields['no_of_ferrules'].choices = [('', 'Select Number')] + ferrule_number_choices
-        
-        # Populate ferrule direction choices (multiple selection)
+        self.fields['no_of_ferrules'].choices = na + ferrule_number_choices
+        self.fields['no_of_ferrules'].required = False
+
+        # Populate ferrule direction choices
         ferrule_direction_choices = [(fd.direction, fd.direction) for fd in FerruleDirectionMaster.objects.all().order_by('direction')]
         self.fields['ferrule_direction'].choices = ferrule_direction_choices
-        
-        # If editing an existing instance, set the ferrule_direction value
+
+        # If editing an existing instance → ferrule direction
         if self.instance and self.instance.pk:
-            # Split the stored comma-separated values
             if self.instance.ferrule_direction:
                 self.initial['ferrule_direction'] = self.instance.ferrule_direction.split(',')
+
+        # =====================================================
+        # FIX: Show "Not Applicable" instead of NULL on EDIT
+        # =====================================================
+        if self.instance and self.instance.pk:
+            na_fields = [
+                'ratio',
+                'burden',
+                'label_type',
+                'class_value',
+                'fs',
+                'kva_rating',
+                'no_of_ferrules',
+            ]
+
+            for field in na_fields:
+                value = getattr(self.instance, field, None)
+                print(f"Field: {field}, Value: {value}")
+                if value in [None, '', 'null']:
+                    self.initial[field] = ''
 
     def clean_model_code(self):
         model_code = self.cleaned_data.get("model_code")
@@ -167,10 +219,38 @@ class MasterCodeForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        # The ferrule_direction is already cleaned and converted to string
+
+        # If blank then store Not Applicable
+        if not instance.ratio:
+            instance.ratio = "Not Applicable"
+        if not instance.burden:
+            instance.burden = "Not Applicable"
+        if not instance.label_type:
+            instance.label_type = "Not Applicable"
+        if not instance.class_value:
+            instance.class_value = "Not Applicable"
+        if not instance.fs:
+            instance.fs = "Not Applicable"
+        if not instance.kva_rating:
+            instance.kva_rating = "Not Applicable"
+
+        # if no_of_ferrules is blank or None -> set 0
+        if not instance.no_of_ferrules:
+            instance.no_of_ferrules = 0
+
+        # Handle ferrule_direction from frontend (list -> string)
+        # Example: ['S1', 'S2'] -> "S1,S2"
+        ferrule_direction = self.cleaned_data.get("ferrule_direction", "")
+        if isinstance(ferrule_direction, list):
+            instance.ferrule_direction = ",".join(ferrule_direction)
+        else:
+            instance.ferrule_direction = ferrule_direction
+
         if commit:
             instance.save()
+
         return instance
+
 
 
 class EmployeeForm(forms.ModelForm):

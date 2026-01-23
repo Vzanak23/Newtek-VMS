@@ -309,6 +309,22 @@
                 <label for="id_label_type">Label Type</label>
                 {{ form.label_type }}
             </div>
+
+            <div class="form-group">
+                <label for="id_class_value">Class</label>
+                {{ form.class_value }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_fs">FS</label>
+                {{ form.fs }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_kva_rating">KVA Rating</label>
+                {{ form.kva_rating }}
+            </div>
+
             
             <div class="form-group">
                 <label for="id_no_of_ferrules">Number of Ferrules</label>
@@ -351,7 +367,10 @@
             <th>Part Name</th>
             <th>Ratio</th>
             <th>Burden</th>
-            <th>Label Type</th>
+            <th>Label Type</th> 
+            <th>Class</th>
+            <th>FS</th>
+            <th>KVA Rating</th>
             <th>Ferrules</th>
             <th>Ferrule Direction</th>
             {% if user.is_superuser %}
@@ -369,6 +388,9 @@
             <td>{{ item.ratio }}</td>
             <td>{{ item.burden }}</td>
             <td>{{ item.label_type }}</td>
+            <td>{{ item.class_value }}</td>
+            <td>{{ item.fs }}</td>
+            <td>{{ item.kva_rating }}</td>
             <td>{{ item.no_of_ferrules }}</td>
             <td>{{ item.ferrule_direction }}</td>
             {% if user.is_superuser %}
@@ -601,6 +623,9 @@
                             <td>${DOMPurify.sanitize(model.ratio)}</td>
                             <td>${DOMPurify.sanitize(model.burden)}</td>
                             <td>${DOMPurify.sanitize(model.label_type)}</td>
+                            <td>${DOMPurify.sanitize(model.class_value)}</td>
+                            <td>${DOMPurify.sanitize(model.fs)}</td>
+                            <td>${DOMPurify.sanitize(model.kva_rating)}</td>
                             <td>${model.no_of_ferrules}</td>
                             <td>${DOMPurify.sanitize(model.ferrule_direction)}</td>
                             ${editDeleteCols}
@@ -657,9 +682,34 @@
             if (data.success) {
                 document.getElementById('id_model_code').value = data.model_code || '';
                 document.getElementById('id_model_description').value = data.model_description || '';
-                document.getElementById('id_ratio').value = data.ratio || '';
-                document.getElementById('id_burden').value = data.burden || '';
-                document.getElementById('id_label_type').value = data.label_type || '';
+                setSelectValue('id_ratio', data.ratio);
+                {% comment %} document.getElementById('id_burden').value = data.burden || ''; {% endcomment %}
+                const burdenSelect = document.getElementById('id_burden');
+                setSelectValue('id_burden', data.burden);
+
+if (data.burden !== null && data.burden !== undefined) {
+    const burdenStr = String(data.burden).trim();
+
+    [...burdenSelect.options].forEach(option => {
+        // Match either VALUE or TEXT
+        if (
+            option.value === burdenStr ||
+            option.text.trim() === burdenStr ||
+            option.text.replace(' VA', '').trim() === burdenStr
+        ) {
+            option.selected = true;
+        }
+    });
+
+    burdenSelect.dispatchEvent(new Event('change'));
+}
+
+setSelectValue('id_label_type', data.label_type);
+setSelectValue('id_class_value', data.class_value);
+setSelectValue('id_fs', data.fs);
+setSelectValue('id_kva_rating', data.kva_rating);
+
+
                 document.getElementById('platformId').value = data.platform_id || '';
 
                 // ✅ FIX FOR NUMBER OF FERRULES (Select2)
@@ -788,6 +838,9 @@
             document.getElementById('id_ratio').selectedIndex = 0;
             document.getElementById('id_burden').selectedIndex = 0;
             document.getElementById('id_label_type').selectedIndex = 0;
+            document.getElementById('id_class_value').selectedIndex = 0;
+            document.getElementById('id_fs').selectedIndex = 0;
+            document.getElementById('id_kva_rating').selectedIndex = 0;
             document.getElementById('id_no_of_ferrules').selectedIndex = 0;
             
             // Reset ferrule direction container
@@ -905,6 +958,20 @@
             });
         }
     });
+    function setSelectValue(selectId, value) {
+        const select = document.getElementById(selectId);
+
+        if (!select) return;
+
+        // Convert stored "Not Applicable" → empty value
+        if (value === null || value === undefined || value === "Not Applicable") {
+            select.value = '';
+        } else {
+            select.value = value;
+        }
+
+        select.dispatchEvent(new Event('change'));
+    }
 
     // Attach form submit handler
     const addForm = document.getElementById('addForm');

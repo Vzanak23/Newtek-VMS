@@ -204,4 +204,16 @@ urlpatterns = [
     path('add-ratio/', views.add_ratio, name='add_ratio'),
     path('delete-ratio/<int:pk>/', views.delete_ratio, name='delete_ratio'),
     path('download-pdf/', views.download_pdf, name='download_pdf'),
-]
+      # Class URLs
+    path('add-class/', views.add_class, name='add_class'),
+    path('delete-class/<int:pk>/', views.delete_class, name='delete_class'),
+    
+    # FS URLs
+    path('add-fs/', views.add_fs, name='add_fs'),
+    path('delete-fs/<int:pk>/', views.delete_fs, name='delete_fs'),
+    
+    # KVA Rating URLs
+    path('add-kva-rating/', views.add_kva_rating, name='add_kva_rating'),
+    path('delete-kva-rating/<int:pk>/', views.delete_kva_rating, name='delete_kva_rating'),
+
+ ]

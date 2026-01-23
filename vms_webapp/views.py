@@ -41,6 +41,7 @@ from django.db.models.functions import Cast
 from django.db.models import DateField
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+
 def user_login(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -411,7 +412,7 @@ def model_edit(request, pk):
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             # Split ferrule_direction back into list for display
             ferrule_directions = record.ferrule_direction.split(',') if record.ferrule_direction else []
-            
+        
             return JsonResponse(
                 {
                     "success": True,
@@ -419,8 +420,11 @@ def model_edit(request, pk):
                     "model_description": record.model_description,
                     "platform_id": getattr(record, "platform_id", None),
                     "ratio": record.ratio,
-                    "burden": record.burden,
+                    "burden": str(record.burden) if record.burden else "",
                     "label_type": record.label_type,
+                    "class_value": record.class_value,
+                    "fs": record.fs,
+                    "kva_rating": record.kva_rating,
                     "ferrule_direction": ferrule_directions,
                     "no_of_ferrules": record.no_of_ferrules,
                 }
@@ -478,6 +482,9 @@ def get_connected_models(request):
         "ratio": m.ratio,
         "burden": m.burden,
         "label_type": m.label_type,
+        "class_value": m.class_value,
+        "fs": m.fs,
+        "kva_rating": m.kva_rating,
         "ferrule_direction": m.ferrule_direction,
         "no_of_ferrules": m.no_of_ferrules,
     } for m in models]
@@ -1940,6 +1947,7 @@ def model_part_selection(request):
                 'message': f'{created_count} new model-part connections created successfully.'
             })
 
+
     else:
         # SESSION fallback
         selected_model_id = request.session.get("selected_model_id")
@@ -3128,6 +3136,7 @@ def show_all_parts(request):
     attributes = attribute_tbl.objects.all()
     concerns = concern_tbl.objects.all()
     highlights = highlight_tbl.objects.all()
+
     user_levels = user_level_tbl.objects.all()
     
     # Remove the trailing commas!
@@ -3135,6 +3144,9 @@ def show_all_parts(request):
     ferrule_directions = FerruleDirectionMaster.objects.all().order_by('direction')
     burdens = BurdenMaster.objects.all().order_by('burden')
     ratios = RatioMaster.objects.all().order_by('ratio')
+    classes = ClassMaster.objects.all().order_by('class_value')
+    fs_values = FSMaster.objects.all().order_by('fs')
+    kva_ratings = KVARatingMaster.objects.all().order_by('kva_rating')
     context = {
         "severities": severities,
         "locations": locations,
@@ -3146,6 +3158,9 @@ def show_all_parts(request):
         "ferrule_directions": ferrule_directions,
         "burdens": burdens,  # Fixed: removed leading space
         "ratios": ratios,
+        "classes": classes,
+        "fs_values": fs_values,
+        "kva_ratings": kva_ratings,
     }
     return render(request, "show_all_parts.html", context)
 
@@ -6640,6 +6655,92 @@ def delete_ratio(request, pk):
             messages.error(request, f"Error deleting Ratio: {str(e)}")
     return redirect('show_all_parts')
 
+def add_class(request):
+    if request.method == 'POST':
+        class_value = request.POST.get('class_value', '').strip()
+        
+        if not class_value:
+            messages.error(request, 'Class value cannot be empty.')
+            return redirect('show_all_parts')
+        
+        if ClassMaster.objects.filter(class_value=class_value).exists():
+            messages.error(request, f'Class "{class_value}" already exists.')
+        else:
+            ClassMaster.objects.create(class_value=class_value)
+            messages.success(request, f'Class "{class_value}" added successfully.')
+    
+    return redirect('show_all_parts')
+
+
+def delete_class(request, pk):
+    if request.method == 'POST':
+        class_obj = get_object_or_404(ClassMaster, pk=pk)
+        class_value = class_obj.class_value
+        class_obj.delete()
+        messages.success(request, f'Class "{class_value}" deleted successfully.')
+    
+    return redirect('show_all_parts')
+
+
+# ============================================
+# FS MASTER VIEWS
+# ============================================
+def add_fs(request):
+    if request.method == 'POST':
+        fs_value = request.POST.get('fs', '').strip()
+        
+        if not fs_value:
+            messages.error(request, 'FS value cannot be empty.')
+            return redirect('show_all_parts')
+        
+        if FSMaster.objects.filter(fs=fs_value).exists():
+            messages.error(request, f'FS "{fs_value}" already exists.')
+        else:
+            FSMaster.objects.create(fs=fs_value)
+            messages.success(request, f'FS "{fs_value}" added successfully.')
+    
+    return redirect('show_all_parts')
+
+
+def delete_fs(request, pk):
+    if request.method == 'POST':
+        fs_obj = get_object_or_404(FSMaster, pk=pk)
+        fs_value = fs_obj.fs
+        fs_obj.delete()
+        messages.success(request, f'FS "{fs_value}" deleted successfully.')
+    
+    return redirect('show_all_parts')
+
+
+# ============================================
+# KVA RATING MASTER VIEWS
+# ============================================
+def add_kva_rating(request):
+    if request.method == 'POST':
+        kva_rating_value = request.POST.get('kva_rating', '').strip()
+        
+        if not kva_rating_value:
+            messages.error(request, 'KVA Rating cannot be empty.')
+            return redirect('show_all_parts')
+        
+        if KVARatingMaster.objects.filter(kva_rating=kva_rating_value).exists():
+            messages.error(request, f'KVA Rating "{kva_rating_value}" already exists.')
+        else:
+            KVARatingMaster.objects.create(kva_rating=kva_rating_value)
+            messages.success(request, f'KVA Rating "{kva_rating_value}" added successfully.')
+    
+    return redirect('show_all_parts')
+
+
+def delete_kva_rating(request, pk):
+    if request.method == 'POST':
+        kva_obj = get_object_or_404(KVARatingMaster, pk=pk)
+        kva_value = kva_obj.kva_rating
+        kva_obj.delete()
+        messages.success(request, f'KVA Rating "{kva_value}" deleted successfully.')
+    
+    return redirect('show_all_parts')
+
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -6661,3 +6762,5 @@ def get_model_ferrule_count(request):
         return JsonResponse({'ferrule_count': 0})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
