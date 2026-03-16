@@ -142,7 +142,7 @@ class MasterCodeForm(forms.ModelForm):
         ferrule_direction_choices = [(fd.direction, fd.direction) for fd in FerruleDirectionMaster.objects.all().order_by('direction')]
         self.fields['ferrule_direction'].choices = ferrule_direction_choices
 
-        # If editing an existing instance → ferrule direction
+        # If editing an existing instance  ferrule direction
         if self.instance and self.instance.pk:
             if self.instance.ferrule_direction:
                 self.initial['ferrule_direction'] = self.instance.ferrule_direction.split(',')

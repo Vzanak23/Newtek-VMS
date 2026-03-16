@@ -841,7 +841,9 @@ setSelectValue('id_kva_rating', data.kva_rating);
             document.getElementById('id_class_value').selectedIndex = 0;
             document.getElementById('id_fs').selectedIndex = 0;
             document.getElementById('id_kva_rating').selectedIndex = 0;
-            document.getElementById('id_no_of_ferrules').selectedIndex = 0;
+            {% comment %} document.getElementById('id_no_of_ferrules').selectedIndex = 0; {% endcomment %}
+            $('#id_no_of_ferrules').val('').trigger('change');
+
             
             // Reset ferrule direction container
             const container = document.getElementById('ferruleDirectionContainer');
